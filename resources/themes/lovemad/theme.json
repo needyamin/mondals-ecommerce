@@ -1,0 +1,40 @@
+{
+    "name": "Lovemad Theme",
+    "slug": "lovemad",
+    "version": "1.0.0",
+    "author": "Mondals Team",
+    "description": "A vibrant, Bootstrap 5 based storefront theme for Mondals E-Commerce",
+    "screenshot": "screenshot.png",
+    "customizable": {
+        "primary_color": {
+            "label": "Primary Color",
+            "type": "color",
+            "default": "#ff4d6d"
+        },
+        "secondary_color": {
+            "label": "Secondary Color",
+            "type": "color",
+            "default": "#2b2d42"
+        },
+        "accent_color": {
+            "label": "Accent Color",
+            "type": "color",
+            "default": "#ffb3c1"
+        },
+        "hero_title": {
+            "label": "Hero Title",
+            "type": "text",
+            "default": "Welcome to Lovemad"
+        },
+        "hero_subtitle": {
+            "label": "Hero Subtitle",
+            "type": "text",
+            "default": "Shop with love and style"
+        },
+        "footer_text": {
+            "label": "Footer Text",
+            "type": "text",
+            "default": "© 2026 Lovemad E-Commerce. Crafted with love."
+        }
+    }
+}

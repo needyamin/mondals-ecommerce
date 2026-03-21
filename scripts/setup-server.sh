@@ -28,9 +28,10 @@ $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev
 sudo apt-get update
 sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-# 5. Enable Docker to start on boot
-sudo systemctl enable docker
-sudo systemctl start docker
+# 5. Fix potential "masked service" issue and Enable Docker to start on boot
+sudo systemctl unmask docker.service || true
+sudo systemctl unmask docker.socket || true
+sudo systemctl enable --now docker
 
 # 6. Add current user to Docker group (requires logout/login)
 sudo usermod -aG docker $USER

@@ -152,6 +152,20 @@ class CartService
     }
 
     /**
+     * Get the total number of items in the cart (sum of quantities).
+     */
+    public function getCartCount(): int
+    {
+        if (auth()->check()) {
+            return CartItem::whereHas('cart', function ($q) {
+                $q->where('user_id', auth()->id());
+            })->sum('quantity');
+        }
+
+        return collect(session('cart', []))->sum('quantity');
+    }
+
+    /**
      * Clear the cart.
      */
     public function clearCart(): void
