@@ -133,7 +133,7 @@ To boot up a local or production instance of the engine:
 
 **1. Clone the Source Directory**
 ```bash
-git clone <your-repo-link> mondals-ecommerce
+git clone https://github.com/needyamin/mondals-ecommerce.git
 cd mondals-ecommerce
 ```
 
