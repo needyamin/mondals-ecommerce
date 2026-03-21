@@ -1,0 +1,22 @@
+{
+    "name": "Pathao Shipping Integration",
+    "slug": "pathao",
+    "version": "1.0.0",
+    "description": "Integration with Pathao Courier for delivery inside and outside Dhaka city.",
+    "author": "Mondals e-Commerce",
+    "author_url": "https://mondals.com",
+    "type": "shipping",
+    "provider": "Plugins\\Pathao\\PluginServiceProvider",
+    "default_settings": {
+        "inside_city_rate": 60,
+        "outside_city_rate": 120
+    },
+    "hooks": [
+        {
+            "name": "register_shipping_methods",
+            "handler": "Plugins\\Pathao\\Handlers\\ShippingMethodHandler",
+            "method": "register",
+            "priority": 10
+        }
+    ]
+}

@@ -1,0 +1,55 @@
+{
+    "name": "Mondals Default",
+    "slug": "default",
+    "version": "1.0.0",
+    "author": "Mondals Team",
+    "description": "A clean, modern storefront theme for Mondals E-Commerce",
+    "screenshot": "screenshot.png",
+    "customizable": {
+        "primary_color": {
+            "label": "Primary Color",
+            "type": "color",
+            "default": "#4F46E5"
+        },
+        "secondary_color": {
+            "label": "Secondary Color",
+            "type": "color",
+            "default": "#0F172A"
+        },
+        "accent_color": {
+            "label": "Accent Color",
+            "type": "color",
+            "default": "#F59E0B"
+        },
+        "hero_title": {
+            "label": "Hero Title",
+            "type": "text",
+            "default": "Welcome to Mondals"
+        },
+        "hero_subtitle": {
+            "label": "Hero Subtitle",
+            "type": "text",
+            "default": "Shop the best products from Bangladesh"
+        },
+        "show_featured_categories": {
+            "label": "Show Featured Categories",
+            "type": "boolean",
+            "default": true
+        },
+        "show_featured_products": {
+            "label": "Show Featured Products",
+            "type": "boolean",
+            "default": true
+        },
+        "show_banners": {
+            "label": "Show Banners",
+            "type": "boolean",
+            "default": true
+        },
+        "footer_text": {
+            "label": "Footer Text",
+            "type": "text",
+            "default": "© 2026 Mondals E-Commerce. All rights reserved."
+        }
+    }
+}

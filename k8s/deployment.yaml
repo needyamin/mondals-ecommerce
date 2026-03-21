@@ -1,0 +1,124 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mondals-ecommerce
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mondals-config
+  namespace: mondals-ecommerce
+data:
+  APP_ENV: "production"
+  APP_DEBUG: "false"
+  APP_URL: "https://mondalsecommerce.com"
+  DB_CONNECTION: "mysql"
+  DB_HOST: "mondals-db-service"
+  DB_PORT: "3306"
+  DB_DATABASE: "mondals_ecommerce"
+  RUN_MIGRATIONS: "true"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mondals-secrets
+  namespace: mondals-ecommerce
+type: Opaque
+data:
+  # Base64 encoded values (Example values used here)
+  APP_KEY: "YmFzZTY0OnB2cll2VWQ2ZlNvalNUTTVnbHQrYW1Ia0R4Mm1ZVnF2eXRkNlhpd0xRems9" # base64:pvrYvUd6fSojCTM5glt+amHkDx2mYVqvytd6XiwLQzk=
+  DB_USERNAME: "cm9vdA==" # root
+  DB_PASSWORD: "cm9vdF9wYXNzd29yZA==" # root_password
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mondals-app
+  namespace: mondals-ecommerce
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: mondals-app
+  template:
+    metadata:
+      labels:
+        app: mondals-app
+    spec:
+      containers:
+      - name: app
+        image: your-docker-registry/mondals-app:latest
+        ports:
+        - containerPort: 80
+        envFrom:
+        - configMapRef:
+            name: mondals-config
+        env:
+        - name: APP_KEY
+          valueFrom:
+            secretKeyRef:
+              name: mondals-secrets
+              key: APP_KEY
+        - name: DB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mondals-secrets
+              key: DB_USERNAME
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mondals-secrets
+              key: DB_PASSWORD
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mondals-app-service
+  namespace: mondals-ecommerce
+spec:
+  type: ClusterIP
+  selector:
+    app: mondals-app
+  ports:
+  - port: 80
+    targetPort: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mondals-ingress
+  namespace: mondals-ecommerce
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  rules:
+  - host: mondalsecommerce.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: mondals-app-service
+            port:
+              number: 80

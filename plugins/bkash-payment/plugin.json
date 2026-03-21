@@ -1,0 +1,17 @@
+{
+    "name": "bKash Payment Gateway",
+    "slug": "bkash-payment",
+    "version": "1.0.0",
+    "author": "Mondals Team",
+    "description": "Accept payments via bKash mobile banking in Bangladesh. Supports sandbox and live modes.",
+    "type": "payment",
+    "provider": "Plugins\\BkashPayment\\BkashPaymentServiceProvider",
+    "default_settings": {
+        "app_key": "",
+        "app_secret": "",
+        "username": "",
+        "password": "",
+        "sandbox": true
+    },
+    "hooks": []
+}

@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mondal's E-Commerce | Exhaustive Developer Documentation</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-bg: #f8f9fa;
+            --sidebar-bg: #ffffff;
+            --highlight: #0d6efd;
+            --text-dark: #212529;
+            --text-muted: #6c757d;
+        }
+
+        body { background-color: var(--primary-bg); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: var(--text-dark); position: relative; }
+        
+        /* Layout */
+        .wrapper { display: flex; width: 100%; align-items: stretch; min-height: 100vh; }
+        .sidebar { min-width: 300px; max-width: 300px; background: var(--sidebar-bg); border-right: 1px solid #dee2e6; position: fixed; top: 0; left: 0; height: 100vh; overflow-y: auto; padding-top: 2rem; padding-bottom: 3rem; z-index: 1000;}
+        .content { width: calc(100% - 300px); margin-left: 300px; padding: 4rem; background: #ffffff; }
+
+        /* Typography */
+        section { margin-bottom: 5rem; scroll-margin-top: 3rem; }
+        h1 { font-weight: 800; font-size: 2.8rem; color: #111827; letter-spacing: -1px; margin-bottom: 1.5rem; border-bottom: 3px solid var(--highlight); padding-bottom: 0.5rem; display: inline-block; }
+        h2 { font-weight: 700; color: #1f2937; margin-top: 3.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.75rem; font-size: 2rem; }
+        h3 { font-weight: 600; color: #374151; margin-top: 2.5rem; margin-bottom: 1rem; font-size: 1.5rem; }
+        h4 { font-weight: 600; color: #4b5563; margin-top: 1.5rem; font-size: 1.25rem; }
+        p, li { font-size: 1.05rem; line-height: 1.7; color: #4b5563; }
+        
+        /* Code Blocks */
+        .code-block { background-color: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 0.5rem; padding: 1.5rem; font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 0.9rem; color: #be185d; white-space: pre-wrap; overflow-x: auto; tab-size: 4; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); margin-bottom: 1.5rem; }
+        code.inline-code { background: #f1f5f9; padding: 0.2rem 0.4rem; border-radius: 4px; font-family: monospace; color: #b91c1c; font-size: 0.9em; border: 1px solid #e2e8f0; }
+
+        /* Components */
+        .nav-link { color: #4b5563; font-weight: 500; padding: 0.5rem 1.5rem; border-left: 3px solid transparent; transition: all 0.2s; }
+        .nav-link:hover { color: var(--highlight); background: #f8fafc; border-left-color: #93c5fd; }
+        .nav-link.active { color: var(--highlight); font-weight: 700; border-left-color: var(--highlight); background: #eff6ff; }
+        .nav-header { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; color: #9ca3af; font-weight: 800; margin: 1.5rem 0 0.5rem; padding: 0 1.5rem; }
+        
+        .badge-entity { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; font-size: 0.8em; padding: 0.3em 0.6em; }
+        .api-method { font-weight: 700; font-size: 0.75rem; padding: 0.3rem 0.6rem; border-radius: 4px; display: inline-block; min-width: 65px; text-align: center; }
+        .method-get { background: #e0f2fe; color: #0284c7; }
+        .method-post { background: #dcfce7; color: #16a34a; }
+        .method-put, .method-patch { background: #fef9c3; color: #ca8a04; }
+        .method-delete { background: #fee2e2; color: #dc2626; }
+        .table th { background-color: #f8fafc; color: #475569; font-weight: 600; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px; }
+        .table td { vertical-align: middle; }
+
+        .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-top: 2rem; }
+        .feature-card { border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1.5rem; background: #fff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+
+        @media (max-width: 991.98px) {
+            .sidebar { transform: translateX(-100%); transition: transform 0.3s ease-in-out; }
+            .content { width: 100%; margin-left: 0; padding: 2rem; }
+            .sidebar.show { transform: translateX(0); }
+        }
+    </style>
+</head>
+<body data-bs-spy="scroll" data-bs-target="#docs-nav" data-bs-smooth-scroll="true" tabindex="0">
+
+<div class="wrapper">
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar shadow-sm" id="docs-nav">
+        <div class="px-4 mb-4 text-center">
+            <h5 class="fw-bold text-primary mb-1"><i class="fas fa-shopping-cart me-2"></i>Mondal's Engine</h5>
+            <span class="badge bg-light text-dark border">Version 1.0.0</span>
+        </div>
+        
+        <div class="nav-header">Overview</div>
+        <ul class="nav flex-column mb-3">
+            <li><a class="nav-link" href="#introduction">Introduction & Features</a></li>
+        </ul>
+
+        <div class="nav-header">File Structure & MVC</div>
+        <ul class="nav flex-column mb-3">
+            <li><a class="nav-link" href="#file-directories">Project Directory Tree</a></li>
+            <li><a class="nav-link" href="#system-models">Eloquent Models & Traits</a></li>
+            <li><a class="nav-link" href="#system-controllers">Controllers Mapped</a></li>
+        </ul>
+
+        <div class="nav-header">Database Schema</div>
+        <ul class="nav flex-column mb-3">
+            <li><a class="nav-link" href="#db-schema">Core Tables (Users, Orders)</a></li>
+            <li><a class="nav-link" href="#db-enums">Strict System Enums</a></li>
+        </ul>
+
+        <div class="nav-header">Custom Engines</div>
+        <ul class="nav flex-column mb-3">
+            <li><a class="nav-link" href="#theme-manager">ThemeManager System</a></li>
+            <li><a class="nav-link" href="#plugin-manager">PluginManager System</a></li>
+        </ul>
+
+        <div class="nav-header">Routing & Endpoints</div>
+        <ul class="nav flex-column pb-5">
+            <li><a class="nav-link" href="#web-routes">Web Storefront Routes</a></li>
+            <li><a class="nav-link" href="#api-routes">REST API Reference (Complete)</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="content">
+        
+        <!-- SECTION 1: Introduction -->
+        <section id="introduction">
+            <h1>Platform Architecture</h1>
+            <p class="lead mt-3">Mondal's E-Commerce engine is an advanced <strong>Laravel 11</strong> application structured explicitly for multi-tenancy (Multi-Vendor). The platform operates on isolated domains separating Customers, Vendors, and Administrators while housing dynamically swappable <strong>Themes</strong> and <strong>Plugins</strong>.</p>
+            
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h5 class="fw-bold text-primary"><i class="fas fa-store me-2"></i>Storefront Routing</h5>
+                    <p class="mb-0 text-muted small">Guest checkouts, session-based cart memory, vendor directories (<code>/stores/{slug}</code>), dynamic categories, and variant pricing algorithms.</p>
+                </div>
+                <div class="feature-card">
+                    <h5 class="fw-bold text-success"><i class="fas fa-bullseye me-2"></i>Admin Dashboard</h5>
+                    <p class="mb-0 text-muted small">Strict pipeline controls for orders, plugin zipper tools, theme uploading tools, payouts dispatch logic, and user permissions.</p>
+                </div>
+                <div class="feature-card">
+                    <h5 class="fw-bold text-warning"><i class="fas fa-boxes me-2"></i>Vendor Control</h5>
+                    <p class="mb-0 text-muted small">Independent catalog management, earning calculations, and localized fulfillment handling within the <code>vendor.*</code> middleware scopes.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: Complete File Structure -->
+        <section id="file-directories">
+            <h2>Complete Directory Structure</h2>
+            <p>Every element respects SOLID principles. Instead of polluting <code>web.php</code> or the base <code>Controllers</code> folder, elements are abstracted into subdirectories.</p>
+            <div class="code-block">
+c:\laragon\www\MondalsEcommerce\
+├── app/
+│   ├── Http/
+│   │   ├── Controllers/
+│   │   │   ├── Admin/         <span class="text-secondary"># Centralized CMS, Approvals, global platform settings</span>
+│   │   │   ├── Api/V1/        <span class="text-secondary"># Segmented JSON strict endpoint controllers</span>
+│   │   │   ├── Auth/          <span class="text-secondary"># Web session & Sanctum authentication logics</span>
+│   │   │   ├── Storefront/    <span class="text-secondary"># Global Cart, Checkout, Categories parsing</span>
+│   │   │   └── Vendor/        <span class="text-secondary"># Scoped Vendor-specific product CRUD & order management</span>
+│   │   └── Middleware/
+│   │       ├── EnsureUserIsAdmin.php
+│   │       └── EnsureUserIsVendor.php
+│   ├── Models/                <span class="text-secondary"># 15+ Core Eloquent schema structures</span>
+│   ├── Providers/
+│   │   └── ThemeServiceProvider.php <span class="text-secondary"># Intercepts View engine for themes</span>
+│   ├── Services/
+│   │   ├── ThemeManager.php   <span class="text-secondary"># Parses active theme and overrides symlinks</span>
+│   │   └── PluginManager.php  <span class="text-secondary"># Discovers & boots dynamic Plugin ZIPs</span>
+│   └── Traits/                <span class="text-secondary"># Reusable logic (HasSlug, Filterable, HasStatus)</span>
+├── database/
+│   ├── migrations/            <span class="text-secondary"># Complex foreign keys, indexes, & restricted ENUMs</span>
+│   └── seeders/               <span class="text-secondary"># Populates global variables & test dummies</span>
+├── plugins/                   <span class="text-secondary"># Physically extracted downloaded ZIP Plugins</span>
+├── resources/
+│   ├── themes/                <span class="text-secondary"># (Dynamic Folder) Houses installed Web Themes</span>
+│   └── views/
+│       ├── admin/             <span class="text-secondary"># Admin blade UI (Tailwind CSS)</span>
+│       └── vendor/            <span class="text-secondary"># Vendor blade UI</span>
+├── routes/
+│   ├── api.php                <span class="text-secondary"># Bearer Token secured endpoints</span>
+│   └── web.php                <span class="text-secondary"># Stateful cookie-driven browser UI</span>
+└── public/
+    └── themes/                <span class="text-secondary"># Static CSS/JS copied organically by ThemeManager</span>
+            </div>
+        </section>
+
+        <!-- SECTION 3: Models & Architecture -->
+        <section id="system-models">
+            <h2>Eloquent Models & Architecture</h2>
+            <p>The system relies heavily on connected relations map. Below is the full explicit database interaction layer Models mapping.</p>
+
+            <table class="table table-bordered table-striped mt-3">
+                <thead><tr><th>Model Name</th><th>Core Responsibilities & Traits</th></tr></thead>
+                <tbody>
+                    <tr><td><span class="badge-entity rounded">Product</span></td><td><span class="badge bg-secondary mb-1">HasSlug</span> <span class="badge bg-secondary mb-1">HasStatus</span> <span class="badge bg-secondary mb-1">Filterable</span><br>Handles variants mapping, vendor associations, track_quantity deductions, and complex scope querying (`scopePublished()`).</td></tr>
+                    <tr><td><span class="badge-entity rounded">Order & OrderItem</span></td><td><span class="badge bg-secondary mb-1">Filterable</span> <span class="badge bg-secondary mb-1">Auditable</span><br>Calculates totals. Holds strict Enums for `status` (shipping logic) and `payment_status` (financial logic). Auto-increments historical audit tables (`OrderStatusHistory`).</td></tr>
+                    <tr><td><span class="badge-entity rounded">User & Vendor</span></td><td>A standard User logs in. To construct a Vendor shop, they must submit a Vendor application. A User <code>hasOne(Vendor::class)</code>. Once approved, Middlewares grant access to `/vendor/`.</td></tr>
+                    <tr><td><span class="badge-entity rounded">Plugin</span></td><td>Registers plugin configurations directly into DB. Used by Provider to check <code>installed_at</code> and `is_active` tags before executing code.</td></tr>
+                    <tr><td><span class="badge-entity rounded">Setting</span></td><td>A globally cached Key-Value pair storage allowing arbitrary config storage via <code>Setting::set('active_theme', 'default', 'theme')</code> without altering `.env`.</td></tr>
+                    <tr><td><span class="badge-entity rounded">Category, Brand, Coupon</span></td><td>Recursive/nested categories structure (parent_id linking). Discount computations based on threshold totals.</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- SECTION 4: Database Overview & ENUMs -->
+        <section id="db-schema">
+            <h2>Database Schema & Entities</h2>
+            <p>A few crucial tables power the integrity of the ecosystem. Notice the strong emphasis on exact Data Types.</p>
+            
+            <h4 class="mt-4"><i class="fas fa-table me-2 text-primary"></i>products table</h4>
+            <p>Keys: <code>id, vendor_id, brand_id, category_id</code><br>
+            Attributes: <code>price, compare_price, quantity, low_stock_threshold, is_featured, track_quantity</code><br>
+            Status (Enum): <code>draft, pending, approved, rejected</code></p>
+
+            <h4 class="mt-4" id="db-enums"><i class="fas fa-table me-2 text-success"></i>orders table (STRICT ENUMS)</h4>
+            <p>To assure financial tracking integrity, you CANNOT overwrite order status with random strings. The API/Admin updates rigidly test against these constraints:</p>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100 shadow-sm border-0">
+                        <div class="card-header bg-light fw-bold border-bottom-0">Col: <code class="text-danger">status</code> (Fulfillment State)</div>
+                        <ul class="list-group list-group-flush small p-2">
+                            <li class="list-group-item bg-transparent text-secondary border-0 py-1"><i class="fas fa-angle-right me-2"></i><strong>pending</strong> (Awaiting merchant action)</li>
+                            <li class="list-group-item bg-transparent border-0 py-1"><i class="fas fa-angle-right me-2"></i>confirmed</li>
+                            <li class="list-group-item bg-transparent border-0 py-1"><i class="fas fa-angle-right me-2"></i>processing</li>
+                            <li class="list-group-item bg-transparent text-primary border-0 py-1"><i class="fas fa-angle-right me-2"></i>shipped</li>
+                            <li class="list-group-item bg-transparent border-0 py-1"><i class="fas fa-angle-right me-2"></i>delivered</li>
+                            <li class="list-group-item bg-transparent border-0 py-1 fw-bold text-success"><i class="fas fa-check-circle me-2"></i>completed</li>
+                            <li class="list-group-item bg-transparent border-0 py-1 fw-bold text-danger"><i class="fas fa-times-circle me-2"></i>cancelled</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100 shadow-sm border-0">
+                        <div class="card-header bg-light fw-bold border-bottom-0">Col: <code class="text-success">payment_status</code> (Finance Line)</div>
+                        <ul class="list-group list-group-flush small p-2">
+                            <li class="list-group-item bg-transparent text-secondary border-0 py-1"><i class="fas fa-angle-right me-2"></i><strong>pending</strong> (Default on instantiation)</li>
+                            <li class="list-group-item bg-transparent border-0 py-1 fw-bold text-success"><i class="fas fa-check-circle me-2"></i>paid (Validated transaction)</li>
+                            <li class="list-group-item bg-transparent border-0 py-1"><i class="fas fa-angle-right me-2"></i>partially_paid</li>
+                            <li class="list-group-item bg-transparent border-0 py-1 text-warning"><i class="fas fa-undo me-2"></i>refunded</li>
+                            <li class="list-group-item bg-transparent border-0 py-1 fw-bold text-danger"><i class="fas fa-times-circle me-2"></i>failed (Gateway rejection)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 5: Extensibility Services -->
+        <section id="theme-manager">
+            <h2>Custom Extensibility 1: Theme Manager</h2>
+            <p class="lead text-muted">A dedicated service to swap frontend skins seamlessly without code deployments.</p>
+            <ol class="list-group list-group-numbered mb-4 shadow-sm border-0">
+                <li class="list-group-item p-3 border-0 border-bottom"><strong>Dynamic Namespacing:</strong> The <code>ThemeServiceProvider</code> boots on startup, fetches the active theme name from the DB (e.g. "sunset"). It intercepts Laravel's View Engine and tells it to search in <code>resources/themes/sunset/views/</code> before searching in <code>resources/views</code>.</li>
+                <li class="list-group-item p-3 border-0 border-bottom"><strong>Static Asset Symlinking:</strong> Because raw folders outside of <code>public/</code> can't be served, the Manager uses <code>File::copyDirectory()</code> [on Windows] or <code>File::link()</code> [on Posix] to push <code>resources/themes/sunset/assets/</code> to <code>public/themes/sunset/</code>.</li>
+                <li class="list-group-item p-3 border-0"><strong>Isolated Configurations:</strong> Themes have a <code>theme.json</code> file storing configurable inputs (colors, toggles). The <code>ThemeManager::getCustomization()</code> allows DB saved overrides specifically per-theme.</li>
+            </ol>
+            <div class="code-block">
+&lt;!-- Mandatory Asset Call for themes --&gt;
+&lt;link rel="stylesheet" href="{{ @themeAsset('css/main.css') }}"&gt;
+            </div>
+        </section>
+
+        <section id="plugin-manager">
+            <h2>Custom Extensibility 2: Plugin Engine</h2>
+            <p>Allows deep functional override via ZIP uploads (e.g., Payment Gateways, ERP Sync). This uses the <code>app('plugin.manager')</code> container singleton.</p>
+            
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm bg-light mb-3">
+                        <div class="card-body p-4">
+                            <h5 class="fw-bold"><i class="fas fa-project-diagram me-2 text-danger"></i>Plugin Pipeline & Admin Hooks</h5>
+                            <p class="mb-2">1. The Admin uploads <code>AcmeGateway.zip</code> via <code>Admin\PluginController@upload</code></p>
+                            <p class="mb-2">2. ZIP is uncompressed into <code>base_path('/plugins')</code>.</p>
+                            <p class="mb-2">3. Admin clicks 'Install'. <code>plugin.manager->activate($plugin)</code> registers the Plugin Provider, executing Database Migrations contained inside the plugin.</p>
+                            <p class="mb-2">4. If the plugin has a file mapping to <code>plugins/{slug}/views/settings.blade.php</code>, the Admin Panel automatically displays a "Settings" configuration window for it!</p>
+                            <p class="mb-0">5. <strong>Purge Mechanism:</strong> Admins can now 'Purge from Disk' to completely delete a plugin's physical folder, ideal for cleaning up duplicates.</p>
+                        </div>
+                    </div>
+
+                    <div class="card border-0 shadow-sm bg-light mb-3">
+                        <div class="card-body p-4">
+                            <h5 class="fw-bold"><i class="fas fa-credit-card me-2 text-primary"></i>Payment & Shipping Hooks</h5>
+                            <p class="mb-2"><strong>bKash Integration:</strong> Supports Tokenized Checkout (v1.2.0-beta) using <code>X-APP-Key</code> and <code>Authorization: Bearer</code> headers. Logic is isolated in <code>BkashGateway.php</code>.</p>
+                            <p class="mb-0"><strong>Unified Shipping:</strong> The <code>CheckoutController</code> merges DB-based methods with plugin-hooked methods into a single <code>availShipping</code> collection, allowing plugins like Pathao to inject rates dynamically.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 6: Complete Routing List -->
+        <h1 class="mt-5 pt-4">Global Network Routing Maps</h1>
+        
+        <section id="web-routes">
+            <h2>1. Web Routes (routes/web.php)</h2>
+            <p>The stateful, session-based routing managing the actual rendered Blade interfaces.</p>
+            
+            <div class="card shadow-sm border-0 mt-4 mb-4">
+                <div class="card-header bg-white fw-bold"><i class="fas fa-globe me-2 text-primary"></i>Public Application (StorefrontController & CartController)</div>
+                <div class="card-body p-0">
+                    <table class="table mb-0">
+                        <tbody>
+                            <tr><td width="30%"><code class="inline-code">GET /</code></td><td>home</td><td>Base Landing Page UI.</td></tr>
+                            <tr><td><code class="inline-code">GET /products</code></td><td>products</td><td>Paginated shop loop (Filters UI).</td></tr>
+                            <tr><td><code class="inline-code">GET /product/{slug}</code></td><td>product.detail</td><td>Target variant breakdown page.</td></tr>
+                            <tr><td><code class="inline-code">GET /cart</code></td><td>cart</td><td>Browser cart interface.</td></tr>
+                            <tr><td><code class="inline-code">POST /cart/add</code></td><td>cart.add</td><td>Adds to session.</td></tr>
+                            <tr><td><code class="inline-code">POST /cart/update</code></td><td>cart.update</td><td>Adjust browser quantities.</td></tr>
+                            <tr><td><code class="inline-code">GET /stores</code></td><td>stores.index</td><td>Vendor Directory landing.</td></tr>
+                            <tr><td><code class="inline-code">GET /stores/{slug}</code></td><td>stores.show</td><td>Single Vendor Page logic.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white fw-bold"><i class="fas fa-lock me-2 text-primary"></i>Authenticated Checkout</div>
+                <div class="card-body p-0">
+                    <table class="table mb-0">
+                        <tbody>
+                            <tr><td width="30%"><code class="inline-code">GET /checkout</code></td><td>checkout</td><td>Displays payment gateway forms.</td></tr>
+                            <tr><td><code class="inline-code">POST /checkout/place-order</code></td><td>checkout.place</td><td>Transforms session cart to DB record.</td></tr>
+                            <tr><td><code class="inline-code">GET /order/confirmation/{orderNumber}</code></td><td>order.confirmation</td><td>Successful state output.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0 mb-4 border-start border-4 border-danger">
+                <div class="card-header bg-white fw-bold">Admin Routes (Prefix: `/admin/` | Middleware: `auth`, `admin`)</div>
+                <div class="card-body p-0">
+                    <table class="table mb-0">
+                        <tbody>
+                            <tr><td width="30%"><code class="inline-code">GET /</code></td><td>admin.dashboard</td><td>Metrics aggregate view.</td></tr>
+                            <tr><td><code class="inline-code">RESOURCE /products</code><br><code class="inline-code">RESOURCE /categories</code><br><code class="inline-code">RESOURCE /brands</code><br><code class="inline-code">RESOURCE /coupons</code></td><td>admin.{resource}.*</td><td>Generated robust BaseCrudController mapping.</td></tr>
+                            <tr><td><code class="inline-code">GET /orders</code></td><td>admin.orders.index</td><td>List pipeline with sorting.</td></tr>
+                            <tr><td><code class="inline-code">GET /orders/{id}</code></td><td>admin.orders.show</td><td>Complex detail and tracking audit views.</td></tr>
+                            <tr><td><code class="inline-code">PATCH /orders/{id}/status</code></td><td>admin.orders.status</td><td>Overrides global status.</td></tr>
+                            <tr><td><code class="inline-code">PATCH /orders/{id}/payment</code></td><td>admin.orders.payment</td><td>Forces payment state change.</td></tr>
+                            <tr><td><code class="inline-code">POST /vendors/{id}/approve</code></td><td>admin.vendors.approve</td><td>Updates Vendor access rights.</td></tr>
+                            <tr><td><code class="inline-code">GET /themes</code></td><td>admin.themes.index</td><td>Theme catalog parsing UI.</td></tr>
+                            <tr><td><code class="inline-code">POST /themes/upload</code></td><td>admin.themes.upload</td><td>Theme zip parsing block.</td></tr>
+                            <tr><td><code class="inline-code">POST /themes/{theme}/activate</code></td><td>admin.themes.activate</td><td>Write to Settings active_theme.</td></tr>
+                            <tr><td><code class="inline-code">GET /plugins</code></td><td>admin.plugins.index</td><td>Lists registered zips from local storage.</td></tr>
+                            <tr><td><code class="inline-code">POST /plugins/{slug}/install</code></td><td>admin.plugins.install</td><td>Executes DB structures inside plugins.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="card shadow-sm border-0 mb-4 border-start border-4 border-warning">
+                <div class="card-header bg-white fw-bold">Vendor Routes (Prefix: `/vendor/` | Middleware: `auth`, `vendor`)</div>
+                <div class="card-body p-0">
+                    <table class="table mb-0">
+                        <tbody class="small">
+                            <tr><td width="30%"><code class="inline-code">GET /</code></td><td>Vendor\DashboardController@index</td><td>Metrics limited to store.</td></tr>
+                            <tr><td><code class="inline-code">RESOURCE /products</code></td><td>Vendor\ProductController</td><td>Local DB manipulation enforcing scopeByVendor.</td></tr>
+                            <tr><td><code class="inline-code">GET /orders</code></td><td>Vendor\OrderController</td><td>Orders mapped by specific vendor items sold.</td></tr>
+                            <tr><td><code class="inline-code">GET /earnings</code></td><td>Vendor\EarningController</td><td>Financials pending Payout.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="api-routes">
+            <h2>2. RESTful API Endpoints (Complete API v1 Mapping)</h2>
+            <p>Every single mobile/headless entry point prefixed under <code>/api/v1/</code> enforcing JSON. Auth protected routes require <code>Bearer {sanctum_token}</code> via the Authorization header.</p>
+            
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped" style="font-size: 0.9rem; vertical-align: middle;">
+                    <thead class="table-dark">
+                        <tr><th width="12%">Method</th><th width="28%">Endpoint Target</th><th width="30%">Expected Payload / Queries</th><th>Description & Responses</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="4" class="bg-light fw-bold text-muted border-bottom-0"><i class="fas fa-unlock me-2"></i>Public Auth & Catalog Routes</td></tr>
+                        
+                        <!-- Auth Public -->
+                        <tr><td><span class="api-method method-post">POST</span></td><td><code class="inline-code">/api/v1/register</code></td><td><code>name</code>, <code>email</code>, <code>password</code>, <code>password_confirmation</code>, <code>phone</code></td><td>Registers a customer. Returns: <code>{ user, token }</code></td></tr>
+                        <tr><td><span class="api-method method-post">POST</span></td><td><code class="inline-code">/api/v1/login</code></td><td><code>email</code>, <code>password</code>, <code>remember</code> (bool)</td><td>Validates credentials. Re-authenticates and returns: <code>{ user, token }</code></td></tr>
+                        
+                        <!-- Catalog & Products -->
+                        <tr><td><span class="api-method method-get">GET</span></td><td><code class="inline-code">/api/v1/categories/tree</code></td><td>None</td><td>Returns nested JSON array structure of categories based on <code>parent_id</code></td></tr>
+                        <tr><td><span class="api-method method-get">GET</span></td><td><code class="inline-code">/api/v1/categories/featured</code></td><td>None</td><td>Returns standard flat array of categories flagged `is_featured = 1`</td></tr>
+                        <tr><td><span class="api-method method-get">GET</span></td><td><code class="inline-code">/api/v1/products</code></td><td><code>?q={string}&category={id}&sort={popular|new|price_asc|price_desc}</code></td><td>Paginates products mapped with variants. Returns standard Laravel paginator JSON.</td></tr>
+                        <tr><td><span class="api-method method-get">GET</span></td><td><code class="inline-code">/api/v1/products/featured</code></td><td>None</td><td>Returns trending, new, and featured product objects.</td></tr>
+                        <tr><td><span class="api-method method-get">GET</span></td><td><code class="inline-code">/api/v1/products/{slug}</code></td><td><code>slug</code> (String Param)</td><td>Returns exhaustive metadata, loads variants, increments view counts.</td></tr>
+                        <tr><td><span class="api-method method-get">GET</span></td><td><code class="inline-code">/api/v1/products/{productId}/reviews</code></td><td><code>productId</code> (Int Param)</td><td>Returns paginated array of approved `Review` objects.</td></tr>
+                        
+                        <!-- Store Directory -->
+                        <tr><td><span class="api-method method-get">GET</span></td><td><code class="inline-code">/api/v1/stores</code></td><td>None</td><td>All approved vendor catalogs globally.</td></tr>
+                        <tr><td><span class="api-method method-get">GET</span></td><td><code class="inline-code">/api/v1/stores/{slug}</code></td><td><code>slug</code> (String Param)</td><td>Specific Vendor profile loaded with their active catalog items.</td></tr>
+
+                        <tr><td colspan="4" class="bg-light fw-bold text-muted border-bottom-0 mt-3 border-top"><i class="fas fa-lock me-2 text-danger"></i>Protected Application Engine (<code>auth:sanctum</code> enforced)</td></tr>
+                        
+                        <!-- Profile & App -->
+                        <tr><td><span class="api-method method-get">GET</span></td><td><code class="inline-code">/api/v1/user</code></td><td>None</td><td>Hydrates total identity mapping (`user`, `vendor`, `roles`)</td></tr>
+                        <tr><td><span class="api-method method-post">POST</span></td><td><code class="inline-code">/api/v1/logout</code></td><td>None</td><td>Wipes DB session string (Tokens deleted).</td></tr>
+                        
+                        <!-- Addresses -->
+                        <tr><td><span class="api-method method-get">GET</span></td><td><code class="inline-code">/api/v1/addresses</code></td><td>None</td><td>Retrieves multiple Customer Address nodes.</td></tr>
+                        <tr><td><span class="api-method method-post">POST</span></td><td><code class="inline-code">/api/v1/addresses</code></td><td><code>title</code>, <code>first_name</code>, <code>last_name</code>, <code>phone</code>, <code>address_line_1</code>, <code>city</code>, <code>state</code>, <code>zip_code</code>, <code>country</code>, <code>type</code></td><td>Generates Address schema tied to the Customer ID.</td></tr>
+                        <tr><td><span class="api-method method-put">PUT</span></td><td><code class="inline-code">/api/v1/addresses/{id}</code></td><td>(Same as POST payload - updates subset)</td><td>Updates an address node. Returns 200 JSON object.</td></tr>
+                        <tr><td><span class="api-method method-delete">DELETE</span></td><td><code class="inline-code">/api/v1/addresses/{id}</code></td><td>None</td><td>Drops an address if not locked to previous orders.</td></tr>
+                        
+                        <!-- Wishlist & Reviews -->
+                        <tr><td><span class="api-method method-get">GET</span></td><td><code class="inline-code">/api/v1/wishlists</code></td><td>None</td><td>Returns User's active favorited product instances.</td></tr>
+                        <tr><td><span class="api-method method-post">POST</span></td><td><code class="inline-code">/api/v1/wishlists/toggle</code></td><td><code>product_id</code> (Int)</td><td>Attaches or detaches from favorites mapping dynamically.</td></tr>
+                        <tr><td><span class="api-method method-post">POST</span></td><td><code class="inline-code">/api/v1/reviews</code></td><td><code>product_id</code>, <code>rating</code>(1-5), <code>comment</code>(Str)</td><td>Injects a pending review.</td></tr>
+
+                        <!-- Cart System -->
+                        <tr><td><span class="api-method method-get">GET</span></td><td><code class="inline-code">/api/v1/cart</code></td><td>None</td><td>Retrieves live Cart Session array, auto-totals, tax matrices.</td></tr>
+                        <tr><td><span class="api-method method-post">POST</span></td><td><code class="inline-code">/api/v1/cart/items</code></td><td><code>product_id</code>, <code>quantity</code>(Int), <code>variant_id</code> (Nullable)</td><td>Validates quantity against inventory constraint, injects item.</td></tr>
+                        <tr><td><span class="api-method method-put">PUT</span></td><td><code class="inline-code">/api/v1/cart/items/{id}</code></td><td><code>quantity</code>(Int)</td><td>Updates numerical value logic inside <code>CartItem</code></td></tr>
+                        <tr><td><span class="api-method method-delete">DELETE</span></td><td><code class="inline-code">/api/v1/cart/items/{id}</code></td><td>None</td><td>Obliterates single line item. Returns recalculated Cart object.</td></tr>
+                        <tr><td><span class="api-method method-post">POST</span></td><td><code class="inline-code">/api/v1/cart/coupon</code></td><td><code>code</code>(String)</td><td>Parses coupon conditions, asserts threshold validity.</td></tr>
+                        <tr><td><span class="api-method method-delete">DELETE</span></td><td><code class="inline-code">/api/v1/cart/coupon</code></td><td>None</td><td>Purges active discount code parameters.</td></tr>
+                        <tr><td><span class="api-method method-delete">DELETE</span></td><td><code class="inline-code">/api/v1/cart</code></td><td>None</td><td>Wipes total Cart storage mappings.</td></tr>
+                        
+                        <!-- Checkout Engine -->
+                        <tr><td><span class="api-method method-post">POST</span></td><td><code class="inline-code">/api/v1/checkout/calculate</code></td><td><code>shipping_method_id</code> (Exists in shipping_methods)</td><td>Pre-flight endpoint processing weight matrices and generating `totals` dict.</td></tr>
+                        <tr><td><span class="api-method method-post">POST</span></td><td><code class="inline-code">/api/v1/checkout/order</code></td><td><code>shipping_address_id</code>, <code>billing_address_id</code>, <code>shipping_method_id</code>, <code>payment_method</code> (cod|bkash|nagad|card), <code>notes</code> (Str)</td><td>Finalizes the pipeline! Compiles <code>Order</code> class, auto-decrements <code>track_quantity</code>, empties the cart. Returns 201 JSON.</td></tr>
+                        
+                        <!-- User Orders Logs -->
+                        <tr><td><span class="api-method method-get">GET</span></td><td><code class="inline-code">/api/v1/orders</code></td><td>None</td><td>Array grouping of chronological orders.</td></tr>
+                        <tr><td><span class="api-method method-get">GET</span></td><td><code class="inline-code">/api/v1/orders/{id}</code></td><td><code>id</code> (Int Param)</td><td>Deep detail payload (Includes Shipping dict, Items array).</td></tr>
+                        <tr><td><span class="api-method method-post">POST</span></td><td><code class="inline-code">/api/v1/orders/{id}/cancel</code></td><td><code>reason</code> (String Nullable)</td><td>Updates enum to <code>cancelled</code> if physical transit has not begun.</td></tr>
+                        
+                        <!-- Vendor Workflows -->
+                        <tr><td><span class="api-method method-post">POST</span></td><td><code class="inline-code">/api/v1/vendor/apply</code></td><td><code>store_name</code>, <code>description</code>, <code>phone</code>, <code>email</code>, <code>city</code>, <code>country</code></td><td>Promotes user ID to `Vendor` request list natively inside the database structure.</td></tr>
+                        <tr><td><span class="api-method method-get">GET</span></td><td><code class="inline-code">/api/v1/vendor/profile</code></td><td>None</td><td>Retrieves full Vendor schema (Logos, banners, descriptions).</td></tr>
+                        <tr><td><span class="api-method method-put">PUT</span></td><td><code class="inline-code">/api/v1/vendor/profile</code></td><td><code>store_name</code>, <code>description</code>, <code>phone</code>, <code>logo</code>, <code>banner</code>, <code>city</code>, <code>country</code></td><td>Overrides parameters mapped internally to the authenticated context.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <footer class="text-center text-muted mt-5 pt-3 border-top mb-5 pb-5">
+            <small>&copy; 2026 Mondal's E-Commerce. Generated Exhaustive Developer Protocol.</small>
+        </footer>
+
+    </main>
+</div>
+
+<!-- Bootstrap 5 JS Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

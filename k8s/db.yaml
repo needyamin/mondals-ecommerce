@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mondals-db
+  namespace: mondals-ecommerce
+spec:
+  serviceName: "mondals-db-service"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mondals-db
+  template:
+    metadata:
+      labels:
+        app: mondals-db
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:8.0
+        ports:
+        - containerPort: 3306
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: "root_password"
+        - name: MYSQL_DATABASE
+          value: "mondals_ecommerce"
+        volumeMounts:
+        - name: db-storage
+          mountPath: /var/lib/mysql
+  volumeClaimTemplates:
+  - metadata:
+      name: db-storage
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mondals-db-service
+  namespace: mondals-ecommerce
+spec:
+  selector:
+    app: mondals-db
+  ports:
+  - port: 3306
+    targetPort: 3306
+  type: ClusterIP

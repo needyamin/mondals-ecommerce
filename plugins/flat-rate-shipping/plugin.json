@@ -1,0 +1,19 @@
+{
+    "name": "Flat Rate Shipping",
+    "slug": "flat-rate-shipping",
+    "version": "1.0.0",
+    "author": "Mondals Team",
+    "description": "Simple flat-rate shipping method with configurable per-zone rates.",
+    "type": "shipping",
+    "provider": "Plugins\\FlatRateShipping\\FlatRateShippingServiceProvider",
+    "default_settings": {
+        "default_rate": 60,
+        "free_shipping_threshold": 2000,
+        "zones": {
+            "dhaka": 60,
+            "chittagong": 100,
+            "other": 120
+        }
+    },
+    "hooks": []
+}
