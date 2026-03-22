@@ -66,16 +66,17 @@ if [ -z "$APP_KEY" ] || [ "$APP_KEY" = "" ]; then
 fi
 
 # ── 7. Run Laravel setup commands ──
+echo "⚡ Caching configuration to ensure correct DB connection..."
+docker exec "$APP_CONTAINER" php artisan config:clear
+docker exec "$APP_CONTAINER" php artisan config:cache
+docker exec "$APP_CONTAINER" php artisan route:cache
+docker exec "$APP_CONTAINER" php artisan view:cache
+
 echo "🛠️  Running database migrations..."
 docker exec "$APP_CONTAINER" php artisan migrate --force
 
 echo "📦 Creating storage symlink..."
 docker exec "$APP_CONTAINER" php artisan storage:link 2>/dev/null || true
-
-echo "⚡ Caching configuration..."
-docker exec "$APP_CONTAINER" php artisan config:cache
-docker exec "$APP_CONTAINER" php artisan route:cache
-docker exec "$APP_CONTAINER" php artisan view:cache
 
 # ── 8. Fix permissions ──
 echo "🔐 Setting file permissions..."
