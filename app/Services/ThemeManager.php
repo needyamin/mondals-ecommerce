@@ -22,12 +22,16 @@ class ThemeManager
     {
         if ($this->activeTheme) return $this->activeTheme;
 
-        $this->activeTheme = Cache::remember('active_theme', 3600, function () {
-            if (!\Illuminate\Support\Facades\Schema::hasTable('settings')) {
-                return 'default';
-            }
-            return Setting::get('active_theme', 'default', 'theme') ?? 'default';
-        });
+        try {
+            $this->activeTheme = Cache::remember('active_theme', 3600, function () {
+                if (!\Illuminate\Support\Facades\Schema::hasTable('settings')) {
+                    return 'default';
+                }
+                return Setting::get('active_theme', 'default', 'theme') ?? 'default';
+            });
+        } catch (\Exception $e) {
+            return 'default';
+        }
 
         return $this->activeTheme;
     }
@@ -96,12 +100,16 @@ class ThemeManager
      */
     public function getCustomization(): array
     {
-        if (!\Illuminate\Support\Facades\Schema::hasTable('settings')) {
+        try {
+            if (!\Illuminate\Support\Facades\Schema::hasTable('settings')) {
+                return [];
+            }
+            $theme = $this->getActive();
+            $stored = Setting::get("theme_{$theme}_customization", null, 'theme');
+            return is_array($stored) ? $stored : [];
+        } catch (\Exception $e) {
             return [];
         }
-        $theme = $this->getActive();
-        $stored = Setting::get("theme_{$theme}_customization", null, 'theme');
-        return is_array($stored) ? $stored : [];
     }
 
     /**

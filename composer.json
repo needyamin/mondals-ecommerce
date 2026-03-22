@@ -23,7 +23,9 @@
     "autoload": {
         "psr-4": {
             "App\\": "app/",
-            "Plugins\\": "plugins/",
+            "Plugins\\BkashPayment\\": "plugins/bkash-payment/src/",
+            "Plugins\\FlatRateShipping\\": "plugins/flat-rate-shipping/src/",
+            "Plugins\\Pathao\\": "plugins/pathao/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
         },
