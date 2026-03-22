@@ -1,122 +1,139 @@
 @extends('layouts.app')
 
-@section('title', 'Explore Collections')
+@section('title', 'Shop Products')
 
 @section('content')
-<div class="container py-5">
-    <!-- Header Section -->
-    <div class="text-center mb-5 overflow-hidden">
-        <h1 class="display-4 fw-bold mb-3">
-            @if(request('q'))
-                Results for "<span class="text-primary">{{ request('q') }}</span>"
-            @elseif(request('category'))
-                <span class="text-primary">{{ ucfirst(request('category')) }}</span>
+<div class="container py-3">
+
+    {{-- Breadcrumb --}}
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb mb-0" style="font-size: 12px;">
+            <li class="breadcrumb-item"><a href="{{ route('home') }}" class="text-decoration-none text-muted">Home</a></li>
+            @if(request('category'))
+                <li class="breadcrumb-item active">{{ ucfirst(request('category')) }}</li>
             @else
-                Explore <span class="text-primary">Collections</span>
+                <li class="breadcrumb-item active">All Products</li>
             @endif
-        </h1>
-        <p class="text-muted lead mx-auto" style="max-width: 700px;">Browse our premium catalog of carefully curated products, crafted with love to fit your unique style.</p>
-    </div>
+        </ol>
+    </nav>
 
-    <!-- Enhanced Category Filters (Bootstrap 5) -->
-    @php
-        $allCategories = \App\Models\Category::where('is_active', true)->withCount('products')->orderBy('name')->get();
-    @endphp
-    <div class="mb-5 text-center overflow-auto py-2 custom-scrollbar">
-        <div class="d-inline-flex gap-2">
-            <a href="{{ route('products', request()->except('category')) }}" class="btn {{ !request('category') ? 'btn-primary' : 'btn-outline-secondary' }} rounded-pill px-4 fw-600 transition shadow-sm">
-                All Collections
-            </a>
-            @foreach($allCategories as $cat)
-                <a href="{{ route('products', array_merge(request()->except('category'), ['category' => $cat->slug])) }}" class="btn {{ request('category') === $cat->slug ? 'btn-primary' : 'btn-outline-secondary' }} rounded-pill px-4 fw-600 transition shadow-sm">
-                    {{ $cat->name }} <span class="small opacity-75 ms-1">({{ $cat->products_count }})</span>
-                </a>
-            @endforeach
-        </div>
-    </div>
-
-    <!-- Toolbar: Results Count & Sorting -->
-    <div class="bg-white p-4 rounded-4 shadow-sm mb-5 d-flex flex-column flex-md-row justify-content-between align-items-center">
-        <div class="mb-3 mb-md-0 d-flex align-items-center">
-            <span class="text-muted small">Showing {{ $products->firstItem() ?? 0 }}–{{ $products->lastItem() ?? 0 }} of {{ $products->total() }} results</span>
-            @if(request('q') || request('category'))
-                <a href="{{ route('products') }}" class="btn btn-link text-danger btn-sm text-decoration-none ms-3 fw-bold"><i class="fas fa-xmark me-1 small"></i> Clear All</a>
-            @endif
-        </div>
-
-        <div class="d-flex align-items-center">
-            <label class="small fw-bold text-muted me-3 d-none d-sm-block">Sort by:</label>
-            <form action="{{ route('products') }}" method="GET" id="sortForm" class="d-flex align-items-center">
-                @if(request('q'))<input type="hidden" name="q" value="{{ request('q') }}">@endif
-                @if(request('category'))<input type="hidden" name="category" value="{{ request('category') }}">@endif
-                <select name="sort" onchange="this.form.submit()" class="form-select border-0 bg-light rounded-pill px-4 shadow-none">
-                    <option value="latest" {{ request('sort', 'latest') === 'latest' ? 'selected' : '' }}>Latest Arrivals</option>
-                    <option value="price_asc" {{ request('sort') === 'price_asc' ? 'selected' : '' }}>Price: Low to High</option>
-                    <option value="price_desc" {{ request('sort') === 'price_desc' ? 'selected' : '' }}>Price: High to Low</option>
-                    <option value="name_asc" {{ request('sort') === 'name_asc' ? 'selected' : '' }}>Name: A–Z</option>
-                    <option value="name_desc" {{ request('sort') === 'name_desc' ? 'selected' : '' }}>Name: Z–A</option>
-                </select>
-            </form>
-        </div>
-    </div>
-
-    <!-- Product Grid -->
-    @if($products->isEmpty())
-        <div class="text-center py-5 bg-white rounded-4 shadow-sm">
-            <div class="mb-4">
-                <i class="fas fa-magnifying-glass display-1 text-light"></i>
-            </div>
-            <h3 class="fw-bold">No Products Found</h3>
-            <p class="text-muted px-4">We couldn't find any products matching your criteria. Try adjusting your filters or search keywords.</p>
-            <a href="{{ route('products') }}" class="btn btn-primary rounded-pill px-5 fw-bold mt-3 shadow">View All Products</a>
-        </div>
-    @else
-        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-4">
-            @foreach($products as $product)
-            <div class="col">
-                <div class="card h-100 border-0 product-card shadow-sm rounded-4 overflow-hidden bg-white">
-                    <div class="position-relative">
-                        <img class="card-img-top" src="{{ $product->primary_image ? asset('storage/' . $product->primary_image) : 'https://placehold.co/400x400/f8f9fa/555?text=No+Image' }}" alt="{{ $product->name }}" />
-                        <div class="product-overlay d-flex align-items-center justify-content-center">
-                            <a href="{{ route('product.detail', $product->slug) }}" class="btn btn-primary rounded-circle me-2 p-3 border-0"><i class="fas fa-eye"></i></a>
-                            <form action="{{ route('cart.add') }}" method="POST">
-                                @csrf
-                                <input type="hidden" name="product_id" value="{{ $product->id }}">
-                                <button type="submit" class="btn btn-dark rounded-circle p-3 border-0"><i class="fas fa-shopping-cart"></i></button>
-                            </form>
-                        </div>
-                    </div>
-                    <div class="card-body p-4 text-center">
-                        <div class="text-muted small mb-1">{{ $product->brand->name ?? 'Mondals' }}</div>
-                        <h5 class="fw-bold mb-2 small text-truncate">{{ $product->name }}</h5>
-                        <div class="fs-5 text-primary fw-bold">
-                            ৳{{ number_format($product->price, 2) }}
-                        </div>
-                    </div>
-                </div>
-            </div>
-            @endforeach
-        </div>
-
-        <!-- Pagination Section -->
-        <div class="mt-5 pt-5 d-flex justify-content-center">
-            {{ $products->appends(request()->query())->links('pagination::bootstrap-5') }}
+    @if(session('success'))
+        <div class="alert alert-success border-0 shadow-sm rounded-0 py-2 mb-3" style="font-size: 13px;">
+            <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
         </div>
     @endif
-</div>
 
-<style>
-    .rounded-4 { border-radius: 1rem !important; }
-    .fw-600 { font-weight: 600; }
-    .product-card { transition: all 0.3s ease; }
-    .product-card:hover { transform: translateY(-5px); box-shadow: 0 1rem 3rem rgba(0,0,0,0.1) !important; }
-    .product-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.1); opacity: 0; transition: 0.3s; }
-    .product-card:hover .product-overlay { opacity: 1; }
-    .custom-scrollbar::-webkit-scrollbar { height: 4px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #ffb3c1; border-radius: 10px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--bs-primary); }
-    .pagination .page-link { border-radius: 50% !important; margin: 0 5px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border: none; color: #555; font-weight: 600; }
-    .pagination .page-item.active .page-link { background-color: var(--bs-primary); color: white; box-shadow: 0 4px 15px rgba(255, 77, 109, 0.3); }
-</style>
+    <div class="row g-3">
+        {{-- Sidebar Filters --}}
+        <div class="col-lg-3 d-none d-lg-block">
+            <div class="bg-white p-3 shadow-sm" style="border-radius: 4px;">
+                <h6 class="fw-bold mb-3 text-uppercase" style="font-size: 13px; border-bottom: 2px solid var(--lm-primary); padding-bottom: 8px;">
+                    <i class="bi bi-funnel me-1"></i> Filters
+                </h6>
+
+                {{-- Category Filters --}}
+                @php
+                    $allCategories = \App\Models\Category::where('is_active', true)->withCount('products')->orderBy('name')->get();
+                @endphp
+                <div class="mb-4">
+                    <h6 class="fw-bold mb-2" style="font-size: 12px; color: var(--lm-text-muted); text-transform: uppercase;">Category</h6>
+                    <div class="d-flex flex-column gap-1">
+                        <a href="{{ route('products', request()->except('category')) }}"
+                           class="text-decoration-none d-flex justify-content-between align-items-center py-1 px-2 rounded {{ !request('category') ? 'fw-bold' : '' }}"
+                           style="font-size: 13px; color: {{ !request('category') ? 'var(--lm-primary)' : '#555' }}; background: {{ !request('category') ? 'var(--lm-orange-soft)' : 'transparent' }};">
+                            All Products
+                        </a>
+                        @foreach($allCategories as $cat)
+                            <a href="{{ route('products', array_merge(request()->except('category'), ['category' => $cat->slug])) }}"
+                               class="text-decoration-none d-flex justify-content-between align-items-center py-1 px-2 rounded"
+                               style="font-size: 13px; color: {{ request('category') === $cat->slug ? 'var(--lm-primary)' : '#555' }}; background: {{ request('category') === $cat->slug ? 'var(--lm-orange-soft)' : 'transparent' }};">
+                                <span>{{ $cat->name }}</span>
+                                <span class="text-muted" style="font-size: 11px;">({{ $cat->products_count }})</span>
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+
+                {{-- Sort Options --}}
+                <div>
+                    <h6 class="fw-bold mb-2" style="font-size: 12px; color: var(--lm-text-muted); text-transform: uppercase;">Sort By</h6>
+                    <form action="{{ route('products') }}" method="GET" id="filterForm">
+                        @if(request('q'))<input type="hidden" name="q" value="{{ request('q') }}">@endif
+                        @if(request('category'))<input type="hidden" name="category" value="{{ request('category') }}">@endif
+                        <select name="sort" onchange="this.form.submit()" class="form-select form-select-sm border-0 bg-light shadow-none" style="font-size: 13px;">
+                            <option value="latest" {{ request('sort', 'latest') === 'latest' ? 'selected' : '' }}>Latest Arrivals</option>
+                            <option value="price_asc" {{ request('sort') === 'price_asc' ? 'selected' : '' }}>Price: Low to High</option>
+                            <option value="price_desc" {{ request('sort') === 'price_desc' ? 'selected' : '' }}>Price: High to Low</option>
+                            <option value="name_asc" {{ request('sort') === 'name_asc' ? 'selected' : '' }}>Name: A–Z</option>
+                            <option value="name_desc" {{ request('sort') === 'name_desc' ? 'selected' : '' }}>Name: Z–A</option>
+                        </select>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {{-- Products Grid --}}
+        <div class="col-lg-9">
+            {{-- Toolbar --}}
+            <div class="bg-white p-3 shadow-sm mb-3 d-flex flex-wrap justify-content-between align-items-center" style="border-radius: 4px;">
+                <span class="text-muted" style="font-size: 13px;">
+                    <strong>{{ $products->total() }}</strong> items found
+                    @if(request('q'))
+                        for "<strong class="text-primary">{{ request('q') }}</strong>"
+                        <a href="{{ route('products') }}" class="text-danger ms-2 text-decoration-none small fw-bold"><i class="bi bi-x-circle me-1"></i>Clear</a>
+                    @endif
+                </span>
+
+                {{-- Mobile sort --}}
+                <div class="d-lg-none">
+                    <form action="{{ route('products') }}" method="GET" id="mobileSortForm">
+                        @if(request('q'))<input type="hidden" name="q" value="{{ request('q') }}">@endif
+                        @if(request('category'))<input type="hidden" name="category" value="{{ request('category') }}">@endif
+                        <select name="sort" onchange="this.form.submit()" class="form-select form-select-sm border-0 bg-light shadow-none" style="font-size: 12px; width: auto;">
+                            <option value="latest" {{ request('sort', 'latest') === 'latest' ? 'selected' : '' }}>Latest</option>
+                            <option value="price_asc" {{ request('sort') === 'price_asc' ? 'selected' : '' }}>Price ↑</option>
+                            <option value="price_desc" {{ request('sort') === 'price_desc' ? 'selected' : '' }}>Price ↓</option>
+                        </select>
+                    </form>
+                </div>
+            </div>
+
+            {{-- Mobile Category Pills --}}
+            <div class="d-lg-none mb-3 overflow-auto custom-scrollbar pb-1">
+                <div class="d-inline-flex gap-2">
+                    <a href="{{ route('products', request()->except('category')) }}" class="btn btn-sm {{ !request('category') ? 'btn-primary' : 'btn-outline-secondary' }} fw-medium" style="font-size: 12px; border-radius: 2px; white-space: nowrap;">
+                        All
+                    </a>
+                    @foreach($allCategories as $cat)
+                        <a href="{{ route('products', array_merge(request()->except('category'), ['category' => $cat->slug])) }}" class="btn btn-sm {{ request('category') === $cat->slug ? 'btn-primary' : 'btn-outline-secondary' }} fw-medium" style="font-size: 12px; border-radius: 2px; white-space: nowrap;">
+                            {{ $cat->name }}
+                        </a>
+                    @endforeach
+                </div>
+            </div>
+
+            @if($products->isEmpty())
+                <div class="bg-white text-center py-5 shadow-sm" style="border-radius: 4px;">
+                    <i class="bi bi-search display-4 text-muted d-block mb-3" style="opacity: .3;"></i>
+                    <h5 class="fw-bold mb-2">No Products Found</h5>
+                    <p class="text-muted mb-3" style="font-size: 13px;">Try adjusting your filters or search criteria.</p>
+                    <a href="{{ route('products') }}" class="btn btn-primary btn-sm fw-bold px-4" style="border-radius: 2px;">Clear All Filters</a>
+                </div>
+            @else
+                <div class="row row-cols-2 row-cols-sm-3 row-cols-xl-4 g-2">
+                    @foreach($products as $product)
+                        <div class="col">
+                            @include('partials.product-card', ['product' => $product])
+                        </div>
+                    @endforeach
+                </div>
+
+                {{-- Pagination --}}
+                <div class="mt-4 d-flex justify-content-center">
+                    {{ $products->appends(request()->query())->links('pagination::bootstrap-5') }}
+                </div>
+            @endif
+        </div>
+    </div>
+</div>
 @endsection

@@ -1,4 +1,5 @@
-# Use PHP 11's recommended runtime (PHP 8.3 with Apache)
+# Mondal's E-Commerce - Production Dockerfile
+# PHP 8.3 with Apache
 FROM php:8.3-apache
 
 # Set working directory
@@ -20,7 +21,6 @@ RUN apt-get update && apt-get install -y \
     unzip \
     git \
     curl \
-    libmagickwand-dev \
     gnupg \
     && rm -rf /var/lib/apt/lists/*
 
@@ -38,12 +38,15 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
         opcache
 
 # Enable Apache rewrite module
-RUN a2enmod rewrite
+RUN a2enmod rewrite headers
 
 # Update Apache DocumentRoot to Laravel's public folder
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+
+# Allow .htaccess overrides
+RUN sed -i '/<Directory \/var\/www\/>/,/<\/Directory>/ s/AllowOverride None/AllowOverride All/' /etc/apache2/apache2.conf 2>/dev/null || true
 
 # Setup custom php.ini configuration
 COPY docker/php.ini /usr/local/etc/php/conf.d/custom-php.ini
@@ -54,25 +57,27 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Copy only the dependency manifest files first for better cache utilization
 COPY composer.json composer.lock ./
 
-# Install project dependencies (optimize for production)
-RUN composer install --no-scripts --no-autoloader --prefer-dist
+# Install project dependencies (no scripts yet - DB not available during build)
+RUN composer install --no-scripts --no-autoloader --prefer-dist --no-dev
 
 # Copy the rest of the application code
 COPY . .
 
-# Finalize composer autoloader and run scripts
-RUN composer dump-autoload --optimize && composer run-post-autoload-script
+# Finalize composer autoloader (without running artisan commands)
+RUN composer dump-autoload --optimize
 
-# Set production environment variables
-ENV APP_ENV=production
-ENV APP_DEBUG=false
+# Create required Laravel directories
+RUN mkdir -p storage/app/public \
+    storage/framework/cache/data \
+    storage/framework/sessions \
+    storage/framework/testing \
+    storage/framework/views \
+    storage/logs \
+    bootstrap/cache
 
 # Setup permissions for Laravel storage and cache directories
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
-
-# Create data symlink to storage
-RUN php artisan storage:link
 
 # Expose port 80
 EXPOSE 80

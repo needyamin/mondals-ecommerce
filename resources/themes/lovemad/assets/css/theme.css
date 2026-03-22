@@ -1,0 +1,28 @@
+/* =============================================
+   LOVEMAD THEME - Daraz-Style CSS
+   ============================================= */
+
+/* ── Reset & Base ── */
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+/* ── Container ── */
+.container { max-width: 1280px; }
+
+/* ── Product Card Hover ── */
+.product-card-lm { transition: all 0.2s ease; border: 1px solid #eee; }
+.product-card-lm:hover { box-shadow: 0 2px 12px rgba(0,0,0,.12); border-color: var(--lm-primary); }
+
+/* ── Section Headers ── */
+.section-title-bar h2 { font-size: 16px; font-weight: 700; text-transform: uppercase; margin: 0; }
+
+/* ── Responsive Tweaks ── */
+@media (max-width: 768px) {
+    .section-title-bar { padding: 10px 15px; }
+    .section-title-bar h2 { font-size: 14px; }
+}
+
+@media (max-width: 576px) {
+    .price-current { font-size: 15px; }
+    .price-old { font-size: 11px; }
+}

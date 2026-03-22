@@ -21,7 +21,10 @@ spec:
         - containerPort: 3306
         env:
         - name: MYSQL_ROOT_PASSWORD
-          value: "root_password"
+          valueFrom:
+            secretKeyRef:
+              name: mondals-secrets
+              key: DB_PASSWORD
         - name: MYSQL_DATABASE
           value: "mondals_ecommerce"
         volumeMounts:
@@ -42,9 +45,9 @@ metadata:
   name: mondals-db-service
   namespace: mondals-ecommerce
 spec:
+  clusterIP: None
   selector:
     app: mondals-db
   ports:
   - port: 3306
     targetPort: 3306
-  type: ClusterIP

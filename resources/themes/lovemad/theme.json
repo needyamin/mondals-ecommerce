@@ -1,40 +1,55 @@
 {
     "name": "Lovemad Theme",
     "slug": "lovemad",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "author": "Mondals Team",
-    "description": "A vibrant, Bootstrap 5 based storefront theme for Mondals E-Commerce",
+    "description": "A Daraz-inspired Bootstrap 5 e-commerce storefront theme with vibrant orange branding, flash sales, mega menus, and a premium shopping experience.",
     "screenshot": "screenshot.png",
     "customizable": {
         "primary_color": {
             "label": "Primary Color",
             "type": "color",
-            "default": "#ff4d6d"
+            "default": "#f85606"
         },
         "secondary_color": {
             "label": "Secondary Color",
             "type": "color",
-            "default": "#2b2d42"
+            "default": "#0f1111"
         },
         "accent_color": {
             "label": "Accent Color",
             "type": "color",
-            "default": "#ffb3c1"
+            "default": "#ff6b35"
         },
         "hero_title": {
             "label": "Hero Title",
             "type": "text",
-            "default": "Welcome to Lovemad"
+            "default": "Mega Sale is Live!"
         },
         "hero_subtitle": {
             "label": "Hero Subtitle",
             "type": "text",
-            "default": "Shop with love and style"
+            "default": "Up to 70% OFF on thousands of products"
+        },
+        "show_featured_categories": {
+            "label": "Show Featured Categories",
+            "type": "boolean",
+            "default": true
+        },
+        "show_featured_products": {
+            "label": "Show Featured Products",
+            "type": "boolean",
+            "default": true
+        },
+        "show_banners": {
+            "label": "Show Banners",
+            "type": "boolean",
+            "default": true
         },
         "footer_text": {
             "label": "Footer Text",
             "type": "text",
-            "default": "© 2026 Lovemad E-Commerce. Crafted with love."
+            "default": "© 2026 Mondals E-Commerce. All rights reserved."
         }
     }
 }
