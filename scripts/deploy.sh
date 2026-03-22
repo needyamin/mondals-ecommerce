@@ -67,14 +67,19 @@ until docker exec "$DB_CONTAINER" mysqladmin ping -h "127.0.0.1" -u root -proot_
 done
 echo "✅ Database is ready!"
 
-# ── 6. Generate app key if not set ──
+# ── 6. Fix permissions early to prevent symlink/cache issues ──
+echo "🔐 Setting initial file permissions..."
+docker exec "$APP_CONTAINER" chown -R www-data:www-data storage bootstrap/cache public
+docker exec "$APP_CONTAINER" chmod -R 775 storage bootstrap/cache public
+
+# ── 7. Generate app key if not set ──
 APP_KEY=$(grep "^APP_KEY=" .env | cut -d '=' -f2)
 if [ -z "$APP_KEY" ] || [ "$APP_KEY" = "" ]; then
     echo "🔑 Generating application key..."
     docker exec "$APP_CONTAINER" php artisan key:generate --force
 fi
 
-# ── 7. Run Laravel setup commands ──
+# ── 8. Run Laravel setup commands ──
 echo "⚡ Caching configuration to ensure correct DB connection..."
 docker exec "$APP_CONTAINER" php artisan config:clear
 docker exec "$APP_CONTAINER" php artisan config:cache
@@ -85,12 +90,8 @@ echo "🛠️  Running database migrations..."
 docker exec "$APP_CONTAINER" php artisan migrate --force
 
 echo "📦 Creating storage symlink..."
+# Ensure public folder is writable for symlink
 docker exec "$APP_CONTAINER" php artisan storage:link 2>/dev/null || true
-
-# ── 8. Fix permissions ──
-echo "🔐 Setting file permissions..."
-docker exec "$APP_CONTAINER" chown -R www-data:www-data storage bootstrap/cache
-docker exec "$APP_CONTAINER" chmod -R 775 storage bootstrap/cache
 
 # ── 10. Quick health check ──
 echo "🔍 Verifying application..."
