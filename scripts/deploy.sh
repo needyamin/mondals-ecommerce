@@ -36,6 +36,8 @@ fi
 # ── 3. Synchronize code from repository ──
 if [ -d .git ]; then
     echo "🔄 Synchronizing code from Git..."
+    # Reclaim ownership to allow git to overwrite files created by Docker www-data
+    sudo chown -R "$USER":"$USER" .
     git fetch origin
     git reset --hard origin/main
 fi
