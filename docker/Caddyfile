@@ -1,0 +1,13 @@
+# Caddyfile for Mondals E-Commerce
+# Domain access with automatic SSL
+needyamin.site {
+    reverse_proxy app:80
+}
+
+# Plain HTTP fallback for direct IP access
+:80 {
+    # If the domain is accessed over HTTP, it will naturally redirect to HTTPS
+    # due to Caddy's automatic behavior. 
+    # Direct IP access will fall back to this proxy.
+    reverse_proxy app:80
+}

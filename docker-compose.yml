@@ -9,9 +9,10 @@ services:
       - "80:80"
       - "443:443"
     volumes:
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
       - caddy_config:/config
-    command: caddy reverse-proxy --from https://needyamin.site --to http://app:80
+    # No command needed when using a Caddyfile at the standard path
     depends_on:
       - app
 
