@@ -1,5 +1,12 @@
-# Mondal's E-Commerce - Production Dockerfile
-# PHP 8.3 with Apache
+# Stage 1: Build Frontend Assets
+FROM node:20 as frontend
+WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN npm ci || npm install
+COPY . .
+RUN npm run build
+
+# Stage 2: PHP 8.3 with Apache
 FROM php:8.3-apache
 
 # Set working directory
@@ -62,6 +69,9 @@ RUN composer install --no-scripts --no-autoloader --prefer-dist --no-dev
 
 # Copy the rest of the application code
 COPY . .
+
+# Extract compiled frontend assets from the node stage
+COPY --from=frontend /app/public/build ./public/build
 
 # Finalize composer autoloader (without running artisan commands)
 RUN composer dump-autoload --optimize

@@ -12,6 +12,7 @@ services:
     volumes:
       - .:/var/www/html
       - /var/www/html/vendor
+      - /var/www/html/public/build
     environment:
       APP_ENV: ${APP_ENV:-local}
       APP_DEBUG: ${APP_DEBUG:-true}
