@@ -33,7 +33,14 @@ if [ ! -f .env ]; then
     fi
 fi
 
-# ── 3. Stop existing containers ──
+# ── 3. Synchronize code from repository ──
+if [ -d .git ]; then
+    echo "🔄 Synchronizing code from Git..."
+    git fetch origin
+    git reset --hard origin/main
+fi
+
+# ── 4. Stop existing containers ──
 echo "🛑 Stopping existing containers..."
 docker compose down --remove-orphans 2>/dev/null || true
 
@@ -83,23 +90,27 @@ echo "🔐 Setting file permissions..."
 docker exec "$APP_CONTAINER" chown -R www-data:www-data storage bootstrap/cache
 docker exec "$APP_CONTAINER" chmod -R 775 storage bootstrap/cache
 
-# ── 9. Quick health check ──
+# ── 10. Quick health check ──
 echo "🔍 Verifying application..."
-sleep 2
-HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000 2>/dev/null || echo "000")
+sleep 5
+HTTP_STATUS=$(curl -s -k -o /dev/null -w "%{http_code}" https://needyamin.site 2>/dev/null || echo "000")
 if [ "$HTTP_STATUS" = "200" ] || [ "$HTTP_STATUS" = "302" ]; then
     echo "✅ Application is responding (HTTP $HTTP_STATUS)"
 else
     echo "⚠️  Application returned HTTP $HTTP_STATUS (may still be starting up)"
-    echo "   Check logs: docker logs $APP_CONTAINER --tail 20"
+    echo "   Check logs: docker logs mondals-caddy --tail 20"
 fi
+
+# ── 11. Cleanup old resources ──
+echo "🧹 Cleaning up old Docker layers..."
+docker image prune -f
 
 echo ""
 echo "============================================"
 echo "  🚀 DEPLOYMENT SUCCESSFUL!"
 echo "============================================"
 echo ""
-echo "  🌐 App:        http://localhost:8000"
+echo "  🌐 App:        https://needyamin.site"
 echo "  🗄️  phpMyAdmin: http://localhost:8088"
 echo "  📊 DB Port:     localhost:3388"
 echo ""

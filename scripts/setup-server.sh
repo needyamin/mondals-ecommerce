@@ -18,7 +18,9 @@ sudo apt-get install -y \
     gnupg \
     lsb-release \
     git \
-    ufw
+    ufw \
+    mysql-client \
+    jq
 
 # ── 3. Setup Docker Official repository ──
 echo "🐳 Setting up Docker repository..."
