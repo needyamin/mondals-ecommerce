@@ -1,12 +1,27 @@
 # Mondal's E-Commerce - Docker Compose
 # Usage: docker compose up -d --build
 services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: mondals-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    command: caddy reverse-proxy --from https://needyamin.site --to http://app:80
+    depends_on:
+      - app
+
   app:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: mondals-app
     restart: unless-stopped
+    # App is hidden behind Caddy now, but we expose 8000 for local network fallback
     ports:
       - "8000:80"
     volumes:
@@ -14,7 +29,9 @@ services:
       - /var/www/html/vendor
       - /var/www/html/public/build
     environment:
+      APP_NAME: "Mondals"
       APP_ENV: ${APP_ENV:-local}
+      APP_URL: https://needyamin.site
       APP_DEBUG: ${APP_DEBUG:-true}
       SESSION_DRIVER: ${SESSION_DRIVER:-database}
       CACHE_STORE: ${CACHE_STORE:-database}
@@ -26,7 +43,7 @@ services:
       DB_USERNAME: ${DB_USERNAME:-root}
       DB_PASSWORD: ${DB_PASSWORD:-root_password}
       RUN_MIGRATIONS: ${RUN_MIGRATIONS:-false}
-      RUN_SEEDERS: ${RUN_SEEDERS:-false}
+      RUN_SEEDERS: ${RUN_SEEDERS:-true}
     depends_on:
       db:
         condition: service_healthy
@@ -66,3 +83,5 @@ services:
 
 volumes:
   dbdata:
+  caddy_data:
+  caddy_config:
