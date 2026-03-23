@@ -8,7 +8,16 @@ use Illuminate\Database\Eloquent\Relations\{BelongsTo, HasMany, BelongsToMany};
 
 class Category extends Model
 {
-    use SoftDeletes, HasSlug, HasStatus, Filterable;
+    use SoftDeletes, HasSlug, HasStatus, Filterable, \App\Traits\HasFallbackImage;
+
+    /**
+     * Get the display image URL with fallback.
+     */
+    public function getDisplayImageAttribute(): string
+    {
+        return $this->getFallbackImage($this->image, $this->name, '400x400');
+    }
+
 
     protected $guarded  = ['id'];
     protected $searchable = ['name'];

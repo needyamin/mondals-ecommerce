@@ -17,7 +17,16 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, HasApiTokens, HasRoles, SoftDeletes;
+    use HasFactory, Notifiable, HasApiTokens, HasRoles, SoftDeletes, \App\Traits\HasFallbackImage;
+
+    /**
+     * Get the user's avatar URL with fallback.
+     */
+    public function getDisplayAvatarAttribute(): string
+    {
+        return $this->getFallbackImage($this->avatar, $this->name, '128x128', 'avatar');
+    }
+
 
     /**
      * The possible status values for a user.

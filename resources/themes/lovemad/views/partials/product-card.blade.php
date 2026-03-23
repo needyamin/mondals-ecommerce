@@ -2,9 +2,9 @@
 <div class="card border-0 card-hover bg-white h-100" style="border-radius: 0; overflow: hidden;">
     {{-- Image --}}
     <a href="{{ route('product.detail', $product->slug) }}" class="d-block position-relative" style="aspect-ratio: 1/1; overflow: hidden; background: #f5f5f5;">
-        <img src="{{ $product->primary_image }}" alt="{{ $product->name }}"
-             class="w-100 h-100" style="object-fit: cover; transition: transform .3s;"
-             onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='scale(1)'">
+        <img src="{{ $product->display_image }}" alt="{{ $product->name }}"
+              class="w-100 h-100" style="object-fit: cover; transition: transform .3s;"
+              onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='scale(1)'">
 
 
         {{-- Badges --}}

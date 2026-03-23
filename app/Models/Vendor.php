@@ -8,7 +8,16 @@ use Illuminate\Database\Eloquent\Relations\{BelongsTo, HasMany};
 
 class Vendor extends Model
 {
-    use SoftDeletes, HasSlug, Filterable, Auditable;
+    use SoftDeletes, HasSlug, Filterable, Auditable, \App\Traits\HasFallbackImage;
+
+    /**
+     * Get the display image URL with fallback.
+     */
+    public function getDisplayImageAttribute(): string
+    {
+        return $this->getFallbackImage($this->logo, $this->store_name, '300x300');
+    }
+
 
     protected $guarded = ['id'];
     protected $casts   = ['settings' => 'array', 'approved_at' => 'datetime'];

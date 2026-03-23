@@ -8,7 +8,18 @@ use Illuminate\Database\Eloquent\Relations\{BelongsTo, HasMany, BelongsToMany};
 
 class Product extends Model
 {
-    use SoftDeletes, HasSlug, HasStatus, Filterable, Auditable;
+    use SoftDeletes, HasSlug, HasStatus, Filterable, Auditable, \App\Traits\HasFallbackImage;
+
+    /**
+     * Get the display image URL with fallback.
+     * Use this in Blade: {{ $product->display_image }}
+     */
+    public function getDisplayImageAttribute(): string
+    {
+        $path = $this->getPrimaryImageAttribute();
+        return $this->getFallbackImage($path, $this->name, '400x400');
+    }
+
 
     protected $guarded  = ['id'];
     protected $searchable = ['name', 'short_description', 'sku'];
@@ -50,10 +61,8 @@ class Product extends Model
 
     public function getPrimaryImageAttribute(): ?string
     {
-        $path = $this->images()->where('is_primary', true)->value('image') ?? $this->thumbnail;
-        return getImageUrl($path);
+        return $this->images()->where('is_primary', true)->value('image') ?? $this->thumbnail;
     }
-
 
     // ── Helpers ──
     public function isInStock(): bool     { return !$this->track_quantity || $this->quantity > 0; }

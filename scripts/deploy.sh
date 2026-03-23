@@ -91,10 +91,12 @@ fi
 
 # ── 8. Run Laravel caching & migrations ──
 echo "⚡ Refreshing application cache..."
+docker exec "$APP_CONTAINER" php artisan cache:clear
 docker exec "$APP_CONTAINER" php artisan config:clear
 docker exec "$APP_CONTAINER" php artisan config:cache
 docker exec "$APP_CONTAINER" php artisan route:cache
 docker exec "$APP_CONTAINER" php artisan view:cache
+
 
 echo "🛠️  Running database migrations..."
 docker exec "$APP_CONTAINER" php artisan migrate --force

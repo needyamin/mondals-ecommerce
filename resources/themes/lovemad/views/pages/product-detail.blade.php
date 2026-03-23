@@ -24,7 +24,7 @@
             {{-- Images --}}
             <div class="col-lg-5">
                 <div class="position-relative mb-3 border rounded overflow-hidden" style="aspect-ratio: 1/1;">
-                    <img src="{{ $product->primary_image }}" alt="{{ $product->name }}"
+                    <img src="{{ $product->display_image }}" alt="{{ $product->name }}"
                          class="w-100 h-100" style="object-fit: contain;" id="main-product-image">
                 </div>
                 @if($product->images->count() > 0)
@@ -32,12 +32,13 @@
                         @foreach($product->images as $image)
                             <div class="flex-shrink-0 border rounded overflow-hidden cursor-pointer thumb-item"
                                  style="width: 64px; height: 64px; cursor: pointer;"
-                                 onclick="document.getElementById('main-product-image').src='{{ $image->url }}'">
-                                <img src="{{ $image->url }}" class="w-100 h-100" style="object-fit: cover;">
+                                 onclick="document.getElementById('main-product-image').src='{{ $image->display_url }}'">
+                                <img src="{{ $image->display_url }}" class="w-100 h-100" style="object-fit: cover;">
                             </div>
                         @endforeach
                     </div>
                 @endif
+
             </div>
 
             {{-- Product Info --}}
