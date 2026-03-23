@@ -24,22 +24,16 @@
             {{-- Images --}}
             <div class="col-lg-5">
                 <div class="position-relative mb-3 border rounded overflow-hidden" style="aspect-ratio: 1/1;">
-                    @if($product->primary_image)
-                        <img src="{{ asset('storage/' . $product->primary_image) }}" alt="{{ $product->name }}"
-                             class="w-100 h-100" style="object-fit: contain;" id="main-product-image">
-                    @else
-                        <div class="d-flex align-items-center justify-content-center w-100 h-100 bg-light">
-                            <i class="bi bi-image text-muted" style="font-size: 80px; opacity: .2;"></i>
-                        </div>
-                    @endif
+                    <img src="{{ $product->primary_image }}" alt="{{ $product->name }}"
+                         class="w-100 h-100" style="object-fit: contain;" id="main-product-image">
                 </div>
                 @if($product->images->count() > 0)
                     <div class="d-flex gap-2 overflow-auto custom-scrollbar pb-2">
                         @foreach($product->images as $image)
                             <div class="flex-shrink-0 border rounded overflow-hidden cursor-pointer thumb-item"
                                  style="width: 64px; height: 64px; cursor: pointer;"
-                                 onclick="document.getElementById('main-product-image').src='{{ asset('storage/' . $image->image) }}'">
-                                <img src="{{ asset('storage/' . $image->image) }}" class="w-100 h-100" style="object-fit: cover;">
+                                 onclick="document.getElementById('main-product-image').src='{{ $image->url }}'">
+                                <img src="{{ $image->url }}" class="w-100 h-100" style="object-fit: cover;">
                             </div>
                         @endforeach
                     </div>

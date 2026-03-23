@@ -11,5 +11,6 @@ class ProductImage extends Model
 
     public function product(): BelongsTo { return $this->belongsTo(Product::class); }
 
-    public function scopePrimary($q) { return $q->where('is_primary', true); }
+    public function getUrlAttribute() { return getImageUrl($this->image); }
 }
+

@@ -2,15 +2,10 @@
 <div class="card border-0 card-hover bg-white h-100" style="border-radius: 0; overflow: hidden;">
     {{-- Image --}}
     <a href="{{ route('product.detail', $product->slug) }}" class="d-block position-relative" style="aspect-ratio: 1/1; overflow: hidden; background: #f5f5f5;">
-        @if($product->primary_image)
-            <img src="{{ asset('storage/' . $product->primary_image) }}" alt="{{ $product->name }}"
-                 class="w-100 h-100" style="object-fit: cover; transition: transform .3s;"
-                 onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='scale(1)'">
-        @else
-            <div class="d-flex align-items-center justify-content-center w-100 h-100 text-muted">
-                <i class="bi bi-image" style="font-size: 48px; opacity: .3;"></i>
-            </div>
-        @endif
+        <img src="{{ $product->primary_image }}" alt="{{ $product->name }}"
+             class="w-100 h-100" style="object-fit: cover; transition: transform .3s;"
+             onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='scale(1)'">
+
 
         {{-- Badges --}}
         <div class="position-absolute top-0 start-0 p-2 d-flex flex-column gap-1">

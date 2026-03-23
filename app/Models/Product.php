@@ -50,8 +50,10 @@ class Product extends Model
 
     public function getPrimaryImageAttribute(): ?string
     {
-        return $this->images()->where('is_primary', true)->value('image') ?? $this->thumbnail;
+        $path = $this->images()->where('is_primary', true)->value('image') ?? $this->thumbnail;
+        return getImageUrl($path);
     }
+
 
     // ── Helpers ──
     public function isInStock(): bool     { return !$this->track_quantity || $this->quantity > 0; }
