@@ -18,9 +18,9 @@ jobs:
           wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
           sudo dpkg -i cloudflared-linux-amd64.deb
 
-      - name: Start Cloudflare Tunnel (Local SSH Port 2222)
+      - name: Start Cloudflare Tunnel (Local SSH Port 22)
         run: |
-          nohup cloudflared access ssh --hostname ${{ secrets.SSH_HOST }} --local-ssh-port 2222 > cloudflared.log 2>&1 &
+          nohup cloudflared access ssh --hostname ${{ secrets.SSH_HOST }} --local-ssh-port 22 > cloudflared.log 2>&1 &
           echo "Waiting 5 seconds for tunnel to be ready..."
           sleep 5
 
