@@ -18,22 +18,18 @@ jobs:
           wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
           sudo dpkg -i cloudflared-linux-amd64.deb
 
-      - name: Deploy via SSH (via Cloudflare Tunnel)
+      - name: Start Cloudflare Tunnel (Local SSH)
+        run: |
+          nohup cloudflared access ssh --hostname ${{ secrets.SSH_HOST }} > cloudflared.log 2>&1 &
+
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.SSH_HOST }}
+          host: localhost                 # Cloudflare tunnel forwards SSH to localhost
+          port: 22                        # Cloudflare Tunnel port
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT || 22 }}
-          # Cloudflare Tunnel SSH Proxy Command
-          proxy_command: /usr/local/bin/cloudflared access ssh --hostname ${{ secrets.SSH_HOST }}
           script: |
-            # 1. Navigate to your project directory (REQUIRED: Update this if different)
-            # This script handles both home and /var/www/ paths
             cd ~/mondals-ecommerce || cd /var/www/mondals-ecommerce || (echo "❌ Project directory not found!" && exit 1)
-
-            # 2. Run the deployment script
-            # Note: This executes your existing deploy.sh on the server
             chmod +x scripts/deploy.sh
             ./scripts/deploy.sh
-
