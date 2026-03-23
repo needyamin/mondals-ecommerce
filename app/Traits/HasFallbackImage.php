@@ -18,7 +18,7 @@ trait HasFallbackImage
     {
         // 1. If we have a path, check if it exists in storage
         if (!empty($path) && \Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {
-            return asset('storage/' . $path);
+            return asset($path);
         }
 
         // 2. Generate fallback based on type

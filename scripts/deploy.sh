@@ -67,20 +67,16 @@ until docker exec "$DB_CONTAINER" mysqladmin ping -h "127.0.0.1" -u root -proot_
 done
 echo "✅ Database is ready!"
 
-# ── 6. Laravel Setup & Auto-Repair ──
-echo "📦 Repairing storage symlinks..."
-# Fully clear existing symlink to force refresh
-docker exec "$APP_CONTAINER" rm -rf public/storage 2>/dev/null || true
-# Re-create using both Artisan and a manual Fallback (absolute paths ensure Docker stability)
-docker exec "$APP_CONTAINER" php artisan storage:link 2>/dev/null || \
-docker exec "$APP_CONTAINER" ln -sf /var/www/html/storage/app/public /var/www/html/public/storage 2>/dev/null || true
+# ── 6. Laravel Setup & Permissions ──
+echo "🔐 Fixing project permissions (Direct Public Storage)..."
+# 1. Migrate any legacy files from storage to public if they exist
+docker exec "$APP_CONTAINER" bash -c "cp -rn storage/app/public/* public/ 2>/dev/null || true"
 
-echo "🔐 Fixing project permissions (Deep Repair)..."
-# 1. Give ownership to www-data for core directories
+# 2. Give ownership to www-data for core directories
 docker exec "$APP_CONTAINER" chown -R www-data:www-data storage bootstrap/cache public
-# 2. Set directory level permissions (775 for app dirs, 755 for tree traversal)
-docker exec "$APP_CONTAINER" chmod -R 775 storage bootstrap/cache public
-docker exec "$APP_CONTAINER" chmod 755 public storage storage/app storage/app/public 2>/dev/null || true
+# 3. Set directory level permissions (775 for app/storage dirs, 755 for public traversal)
+docker exec "$APP_CONTAINER" chmod -R 775 storage bootstrap/cache
+docker exec "$APP_CONTAINER" chmod -R 755 public
 
 # ── 7. Generate app key if not set ──
 APP_KEY=$(grep "^APP_KEY=" .env | cut -d '=' -f2)
