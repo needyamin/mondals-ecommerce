@@ -7,46 +7,33 @@ on:
 
 jobs:
   deploy:
-    name: Deploy via Cloudflare Tunnel SSH
+    name: Deploy to Ubuntu Server via SSH
     runs-on: ubuntu-latest
     steps:
-      # 1️⃣ Checkout code
-      - name: Checkout code
+      # 1️⃣ Checkout the code
+      - name: Git Checkout
         uses: actions/checkout@v4
 
-      # 2️⃣ Install cloudflared
+      # 2️⃣ Install cloudflared on the GitHub Action runner (REQUIRED for Cloudflare Tunnel)
       - name: Install cloudflared
         run: |
           wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
           sudo dpkg -i cloudflared-linux-amd64.deb
 
-      # 3️⃣ Configure SSH to use Cloudflare Tunnel
-      - name: Configure SSH for Cloudflare Access
-        run: |
-          mkdir -p ~/.ssh
-          # Write SSH key from secret
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-
-          # SSH config to use cloudflared as ProxyCommand
-          cat <<EOF > ~/.ssh/config
-Host ${{ secrets.SSH_HOST }}
-    ProxyCommand cloudflared access ssh --hostname %h
-    User ${{ secrets.SSH_USER }}
-    IdentityFile ~/.ssh/id_rsa
-    StrictHostKeyChecking no
-EOF
-          chmod 600 ~/.ssh/config
-
-      # 4️⃣ Test SSH connection
-      - name: Test SSH connection
-        run: ssh ${{ secrets.SSH_HOST }} "echo 'SSH via Cloudflare Tunnel OK'"
-
-      # 5️⃣ Deploy via SSH
+      # 3️⃣ Deploy via SSH using cloudflared as a proxy
       - name: Deploy via SSH
-        run: |
-          ssh ${{ secrets.SSH_HOST }} << 'EOF'
-            cd ~/mondals-ecommerce || cd /var/www/mondals-ecommerce || exit 1
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}       # ssh.needyamin.site
+          port: 22
+          username: ${{ secrets.SSH_USER }}   # needyamin
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          # This command is the 'bridge' that finds your server through the tunnel
+          proxy_command: /usr/local/bin/cloudflared access ssh --hostname ${{ secrets.SSH_HOST }}
+          script: |
+            # Navigate to your project
+            cd ~/mondals-ecommerce || cd /var/www/mondals-ecommerce || (echo "❌ Project directory not found!" && exit 1)
+
+            # Make deploy script executable and run it
             chmod +x scripts/deploy.sh
             ./scripts/deploy.sh
-          EOF
