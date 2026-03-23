@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy:
-    name: Deploy to Local Ubuntu
+    name: Deploy to Local Ubuntu via Cloudflare Tunnel
     runs-on: ubuntu-latest
     steps:
       - name: Git Checkout
@@ -18,15 +18,17 @@ jobs:
           wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
           sudo dpkg -i cloudflared-linux-amd64.deb
 
-      - name: Start Cloudflare Tunnel (Local SSH)
+      - name: Start Cloudflare Tunnel (Local SSH Port 2222)
         run: |
-          nohup cloudflared access ssh --hostname ${{ secrets.SSH_HOST }} > cloudflared.log 2>&1 &
+          nohup cloudflared access ssh --hostname ${{ secrets.SSH_HOST }} --local-ssh-port 2222 > cloudflared.log 2>&1 &
+          echo "Waiting 5 seconds for tunnel to be ready..."
+          sleep 5
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: localhost                 # Cloudflare tunnel forwards SSH to localhost
-          port: 22                        # Cloudflare Tunnel port
+          host: localhost
+          port: 2222
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
