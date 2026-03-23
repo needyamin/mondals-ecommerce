@@ -1,4 +1,4 @@
-name: Deploy Mondal's E-Commerce (Cloudflare Tunnel)
+name: Deploy Mondal's E-Commerce
 
 on:
   push:
@@ -7,31 +7,25 @@ on:
 
 jobs:
   deploy:
-    name: Deploy to Local Ubuntu via Cloudflare Tunnel
+    name: Deploy to Ubuntu Server via SSH
     runs-on: ubuntu-latest
     steps:
+      # 1️⃣ Checkout the code
       - name: Git Checkout
         uses: actions/checkout@v4
 
-      - name: Install cloudflared
-        run: |
-          wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
-          sudo dpkg -i cloudflared-linux-amd64.deb
-
-      - name: Start Cloudflare Tunnel (Local SSH Port 2222)
-        run: |
-          nohup cloudflared access ssh --hostname ${{ secrets.SSH_HOST }} --local-ssh-port 2222 > cloudflared.log 2>&1 &
-          echo "Waiting 5 seconds for tunnel to be ready..."
-          sleep 5
-
+      # 2️⃣ Deploy via SSH directly to your server
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: localhost             # Tunnel forwards SSH to localhost
-          port: 2222                  # Forwarded local port from Cloudflare Tunnel
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          host: ${{ secrets.SSH_HOST }}       # ssh.needyamin.site
+          port: 22                             # your server SSH port
+          username: ${{ secrets.SSH_USER }}   # needyamin
+          key: ${{ secrets.SSH_PRIVATE_KEY }} # your private SSH key
           script: |
+            # Navigate to your project
             cd ~/mondals-ecommerce || cd /var/www/mondals-ecommerce || (echo "❌ Project directory not found!" && exit 1)
+
+            # Make deploy script executable and run it
             chmod +x scripts/deploy.sh
             ./scripts/deploy.sh
