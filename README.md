@@ -16,6 +16,8 @@ Mondal's Engine is designed to facilitate a robust multi-vendor ecosystem. It is
 
 ---
 
+<img width="1920" height="3139" alt="Image" src="https://github.com/user-attachments/assets/66045b2d-83ca-408e-9799-38c240cc2ba0" />
+
 ## 🧱 Core Application Architecture (MVC+)
 
 The architecture heavily abstracts standard logic. Code is organized using deeply nested controllers and custom Service execution layers.
