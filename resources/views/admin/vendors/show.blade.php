@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Merchant Terminal: ' . $vendor->store_name)
+@section('title', $vendor->store_name)
 
 @section('content')
 
@@ -11,8 +11,15 @@
                 <svg class="w-7 h-7 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
             </a>
             <div class="flex items-center gap-5">
-                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-600 to-indigo-700 flex items-center justify-center text-white font-black text-2xl shadow-xl shadow-brand-500/30">
-                    {{ substr($vendor->store_name, 0, 1) }}
+                <div class="flex shrink-0 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-600 shadow-lg bg-slate-100 dark:bg-slate-800">
+                    @if($vendor->display_banner)
+                        <div class="hidden sm:block w-24 h-16 relative border-r border-slate-200 dark:border-slate-600">
+                            <img src="{{ $vendor->display_banner }}" alt="" class="absolute inset-0 w-full h-full object-cover">
+                        </div>
+                    @endif
+                    <div class="w-16 h-16 sm:w-14 sm:h-16 flex items-center justify-center">
+                        <img src="{{ $vendor->display_image }}" alt="" class="w-full h-full object-cover" loading="lazy">
+                    </div>
                 </div>
                 <div>
                     <div class="flex items-center gap-3">
@@ -166,10 +173,10 @@
                 </div>
                 <!-- Card 2 -->
                 <div class="group bg-white dark:bg-darkpanel p-8 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-1">
-                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] block mb-4">Total Sales</span>
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] block mb-4">Order lines</span>
                     <div class="flex items-end justify-between">
                         <span class="text-4xl font-black text-emerald-600 leading-none tracking-tighter">{{ $vendor->orders_count }}</span>
-                        <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-bold text-xs uppercase">Orders</div>
+                        <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-bold text-xs uppercase">Lines</div>
                     </div>
                 </div>
                 <!-- Card 3 -->
@@ -208,7 +215,7 @@
                                     <div class="flex items-center">
                                         <div class="w-14 h-14 bg-slate-100 dark:bg-slate-800 rounded-2xl overflow-hidden flex-shrink-0 mr-5 border border-slate-200 dark:border-slate-700 p-0.5 group-hover:scale-110 transition-transform">
                                             @if($product->primary_image)
-                                                <img src="{{ asset('storage/' . $product->primary_image) }}" class="w-full h-full object-cover rounded-[0.6rem]">
+                                                <img src="{{ $product->display_image }}" alt="" class="w-full h-full object-cover rounded-[0.6rem]">
                                             @else
                                                 <div class="w-full h-full flex items-center justify-center text-slate-300">
                                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>

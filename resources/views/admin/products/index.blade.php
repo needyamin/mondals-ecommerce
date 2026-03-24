@@ -23,25 +23,26 @@
     </div>
 
     <!-- Filters & Search Bar -->
-    <div class="bg-white dark:bg-darkpanel rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 p-2 mb-6 flex flex-col md:flex-row items-center justify-between">
-        <form method="GET" action="{{ route('admin.products.index') }}" class="flex-grow w-full md:w-auto relative group">
+    <form method="GET" action="{{ route('admin.products.index') }}" class="bg-white dark:bg-darkpanel rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 p-2 mb-6 flex flex-col md:flex-row items-center justify-between">
+        <div class="flex-grow w-full md:w-auto relative group">
             <div class="absolute inset-y-0 left-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-brand-500 transition-colors">
                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
             </div>
             <input type="text" name="search" value="{{ request('search') }}" class="w-full bg-transparent border-none focus:ring-0 pl-12 pr-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500" placeholder="Search by name, SKU, or tags...">
-        </form>
+        </div>
         <div class="w-full md:w-auto flex items-center gap-2 p-2 border-t md:border-t-0 md:border-l border-slate-100 dark:border-slate-800">
-            <select name="status" class="bg-slate-50 dark:bg-slate-800/50 border-none rounded-xl text-sm font-medium text-slate-700 dark:text-slate-300 focus:ring-0 py-2.5 px-4 cursor-pointer">
+            <select name="status" onchange="this.form.submit()" class="bg-slate-50 dark:bg-slate-800/50 border-none rounded-xl text-sm font-medium text-slate-700 dark:text-slate-300 focus:ring-0 py-2.5 px-4 cursor-pointer">
                 <option value="">All Statuses</option>
-                <option value="approved">Approved</option>
-                <option value="pending">Pending</option>
-                <option value="draft">Draft</option>
+                <option value="approved" {{ request('status')==='approved'?'selected':'' }}>Approved</option>
+                <option value="pending" {{ request('status')==='pending'?'selected':'' }}>Pending</option>
+                <option value="draft" {{ request('status')==='draft'?'selected':'' }}>Draft</option>
+                <option value="rejected" {{ request('status')==='rejected'?'selected':'' }}>Rejected</option>
             </select>
-            <button class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 p-2.5 rounded-xl transition-colors" title="Advanced Filters">
-                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+            <button type="submit" class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 p-2.5 rounded-xl transition-colors" title="Apply Filters">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
             </button>
         </div>
-    </div>
+    </form>
 
     <!-- Data Table -->
     <div class="bg-white dark:bg-darkpanel rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
@@ -63,11 +64,7 @@
                         <td class="px-6 py-4">
                             <div class="flex items-center space-x-4">
                                 <div class="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 overflow-hidden flex items-center justify-center flex-shrink-0">
-                                    @if($product->primary_image)
-                                        <img src="{{ Storage::url($product->primary_image) }}" class="w-full h-full object-cover">
-                                    @else
-                                        <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                    @endif
+                                    <img src="{{ $product->display_image }}" alt="" class="w-full h-full object-cover">
                                 </div>
                                 <div>
                                     <p class="text-sm font-bold text-slate-900 dark:text-white font-heading group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">{{ $product->name }}</p>

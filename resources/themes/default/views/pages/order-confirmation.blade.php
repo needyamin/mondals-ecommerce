@@ -31,7 +31,7 @@
                 <div class="flex items-center space-x-4">
                     <div class="w-14 h-14 bg-slate-100 dark:bg-slate-800 rounded-xl flex items-center justify-center border border-slate-200 dark:border-slate-700 overflow-hidden flex-shrink-0">
                         @if($item->product && $item->product->primary_image)
-                            <img src="{{ asset('storage/' . $item->product->primary_image) }}" class="w-full h-full object-cover">
+                            <img src="{{ $item->product->display_image }}" alt="" class="w-full h-full object-cover">
                         @else
                             <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
                         @endif
@@ -85,4 +85,7 @@
         </a>
     </div>
 </div>
+@push('scripts')
+    @include('partials.marketing-purchase', ['order' => $order])
+@endpush
 @endsection

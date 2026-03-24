@@ -1,16 +1,17 @@
 @extends('layouts.admin')
 
-@section('title', $user ? 'Modify User Profile' : 'User Provisioning')
+@section('title', $user ? 'Edit user' : 'Add user')
 
 @section('content')
 
-    <div class="mb-10 flex items-center justify-between">
+    <div class="mb-8 flex items-center justify-between gap-4">
         <div>
-            <h2 class="text-3xl font-black text-slate-900 dark:text-white font-heading tracking-tight underline decoration-brand-500 decoration-4 underline-offset-8">User {{ $user ? 'Modification' : 'Provisioning' }}</h2>
-            <p class="text-slate-500 dark:text-slate-400 mt-4 font-medium uppercase tracking-widest text-[10px]">{{ $user ? 'Overriding established subject data.' : 'Create or Synchronize internal & external accounts.' }}</p>
+            <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white font-heading tracking-tight">{{ $user ? 'Edit user' : 'Add user' }}</h2>
+            <p class="text-slate-500 dark:text-slate-400 mt-1 text-sm">{{ $user ? 'Update profile, role, and status.' : 'Create an account and assign a role.' }}</p>
         </div>
-        <a href="{{ route('admin.users.index') }}" class="w-12 h-12 rounded-2xl bg-white dark:bg-darkpanel border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:text-brand-600 shadow-xl transition-all">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        <a href="{{ route('admin.users.index') }}" class="inline-flex items-center text-slate-500 hover:text-brand-600 font-bold text-sm bg-white dark:bg-darkpanel px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm transition">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+            Back
         </a>
     </div>
 

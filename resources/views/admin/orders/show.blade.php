@@ -71,8 +71,8 @@
                                 <td class="px-6 py-4">
                                     <div class="flex items-center">
                                         <div class="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden flex-shrink-0 mr-4 border border-slate-200 dark:border-slate-700">
-                                            @if($item->product && $item->product->images)
-                                                <img src="{{ Storage::url(collect($item->product->images)->first()) }}" class="w-full h-full object-cover">
+                                            @if($item->product)
+                                                <img src="{{ $item->product->display_image }}" alt="" class="w-full h-full object-cover">
                                             @else
                                                 <div class="w-full h-full flex items-center justify-center text-slate-400">
                                                     <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path></svg>

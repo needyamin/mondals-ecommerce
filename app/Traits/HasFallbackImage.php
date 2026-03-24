@@ -2,6 +2,7 @@
 
 namespace App\Traits;
 
+use App\Support\MediaDisks;
 use Illuminate\Support\Facades\Storage;
 
 trait HasFallbackImage
@@ -14,11 +15,17 @@ trait HasFallbackImage
      * @param string $size e.g. 400x400
      * @return string
      */
-    public function getFallbackImage(?string $path, ?string $label = null, string $size = '400x400', string $type = 'image'): string
+    public function getFallbackImage(?string $path, ?string $label = null, string $size = '400x400', string $type = 'image', ?string $diskKey = 'public'): string
     {
-        // 1. If we have a path, check if it exists in storage
-        if (!empty($path) && \Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {
-            return asset($path);
+        if (!empty($path)) {
+            if ($diskKey === 'products') {
+                $url = MediaDisks::productUrl($path);
+                if ($url) {
+                    return $url;
+                }
+            } elseif (Storage::disk($diskKey)->exists($path)) {
+                return Storage::disk($diskKey)->url($path);
+            }
         }
 
         // 2. Generate fallback based on type

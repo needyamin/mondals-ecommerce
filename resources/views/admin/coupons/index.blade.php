@@ -10,7 +10,7 @@
             <p class="text-slate-500 dark:text-slate-400 mt-1">Generate discount codes, limit redemptions, and track promo success.</p>
         </div>
         <div class="flex items-center gap-3">
-            <a href="#" class="bg-brand-600 hover:bg-brand-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-brand-500/30 transition flex items-center">
+            <a href="{{ route('admin.coupons.create') }}" class="bg-brand-600 hover:bg-brand-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-brand-500/30 transition flex items-center">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                 New Coupon
             </a>
@@ -48,19 +48,25 @@
                         </td>
 
                         <td class="px-6 py-4 font-bold text-slate-900 dark:text-white">
-                            {{ $coupon->type === 'percent' ? $coupon->value . '%' : '৳' . number_format($coupon->value, 2) }}
+                            @if($coupon->type === 'percentage')
+                                {{ rtrim(rtrim(number_format((float) $coupon->value, 2), '0'), '.') }}%
+                            @elseif($coupon->type === 'free_shipping')
+                                Free shipping
+                            @else
+                                ৳{{ number_format($coupon->value, 2) }}
+                            @endif
                             <span class="text-xs font-medium text-slate-500 block">Off total</span>
                         </td>
                         
                         <td class="px-6 py-4">
-                            <span class="text-sm text-slate-700 dark:text-slate-300">{{ $coupon->usage_count }} / {{ $coupon->usage_limit ?? '∞' }}</span>
+                            <span class="text-sm text-slate-700 dark:text-slate-300">{{ $coupon->times_used }} / {{ $coupon->usage_limit ?? '∞' }}</span>
                         </td>
 
                         <td class="px-6 py-4">
                             @php
                                 $valid = true;
                                 if ($coupon->expires_at && $coupon->expires_at->isPast()) $valid = false;
-                                if ($coupon->usage_limit && $coupon->usage_count >= $coupon->usage_limit) $valid = false;
+                                if ($coupon->usage_limit && $coupon->times_used >= $coupon->usage_limit) $valid = false;
                             @endphp
                             <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border 
                                 {{ $valid && $coupon->is_active ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800/50 dark:text-emerald-400' : 'bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-900/20 dark:border-rose-800/50 dark:text-rose-400' }}
@@ -70,7 +76,7 @@
                         </td>
 
                         <td class="px-6 py-4 text-right space-x-2">
-                            <a href="#" class="inline-flex items-center justify-center px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors">Edit</a>
+                            <a href="{{ route('admin.coupons.edit', $coupon) }}" class="inline-flex items-center justify-center px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors">Edit</a>
                             <form action="{{ route('admin.coupons.destroy', $coupon->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Delete this promotion?');">
                                 @csrf
                                 @method('DELETE')

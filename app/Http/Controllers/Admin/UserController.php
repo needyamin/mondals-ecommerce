@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\{User, Vendor};
+use App\Models\User;
 use Illuminate\Http\Request;
 
 use App\Traits\ExportsToCsv;
@@ -11,6 +11,13 @@ use App\Traits\ExportsToCsv;
 class UserController extends Controller
 {
     use ExportsToCsv;
+
+    /** @var list<string> */
+    private const STATUSES = ['active', 'inactive', 'banned', 'pending'];
+
+    /** @var list<string> */
+    private const ROLES = ['customer', 'admin', 'vendor'];
+
     /**
      * List all customers.
      */
@@ -18,18 +25,39 @@ class UserController extends Controller
     {
         $query = User::withCount('orders')->with('roles');
 
-        if ($search = $request->input('search')) {
-            $query->where(fn($q) => $q->where('name', 'LIKE', "%{$search}%")->orWhere('email', 'LIKE', "%{$search}%"));
+        if ($search = trim((string) $request->input('search', ''))) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                    ->orWhere('email', 'LIKE', "%{$search}%");
+                if (ctype_digit($search)) {
+                    $q->orWhere('id', (int) $search);
+                }
+            });
         }
-        if ($status = $request->input('status')) {
-            $query->where('status', $status);
+        if ($request->filled('status')) {
+            $st = $request->string('status')->trim()->toString();
+            if (in_array($st, self::STATUSES, true)) {
+                $query->where('status', $st);
+            }
         }
-        if ($role = $request->input('role')) {
-            $query->role($role);
+        if ($request->filled('role')) {
+            $role = $request->string('role')->trim()->toString();
+            if (in_array($role, self::ROLES, true)) {
+                $query->role($role);
+            }
         }
 
         $users = $query->latest()->paginate(20)->withQueryString();
-        return view('admin.users.index', compact('users'));
+
+        $stats = [
+            'total'    => User::count(),
+            'active'   => User::where('status', 'active')->count(),
+            'inactive' => User::where('status', 'inactive')->count(),
+            'banned'   => User::where('status', 'banned')->count(),
+            'pending'  => User::where('status', 'pending')->count(),
+        ];
+
+        return view('admin.users.index', compact('users', 'stats'));
     }
 
     /**
@@ -73,7 +101,9 @@ class UserController extends Controller
      */
     public function show(int $id)
     {
-        $user = User::with(['orders' => fn($q) => $q->latest()->limit(10), 'addresses'])->findOrFail($id);
+        $user = User::with(['orders' => fn($q) => $q->latest()->limit(10), 'addresses', 'roles'])
+            ->withCount('orders')
+            ->findOrFail($id);
         return view('admin.users.show', compact('user'));
     }
 
@@ -146,15 +176,27 @@ class UserController extends Controller
     public function export(Request $request)
     {
         $query = User::with('roles');
-        
-        if ($search = $request->input('search')) {
-            $query->where(fn($q) => $q->where('name', 'LIKE', "%{$search}%")->orWhere('email', 'LIKE', "%{$search}%"));
+
+        if ($search = trim((string) $request->input('search', ''))) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                    ->orWhere('email', 'LIKE', "%{$search}%");
+                if (ctype_digit($search)) {
+                    $q->orWhere('id', (int) $search);
+                }
+            });
         }
-        if ($role = $request->input('role')) {
-            $query->role($role);
+        if ($request->filled('role')) {
+            $role = $request->string('role')->trim()->toString();
+            if (in_array($role, self::ROLES, true)) {
+                $query->role($role);
+            }
         }
-        if ($status = $request->input('status')) {
-            $query->where('status', $status);
+        if ($request->filled('status')) {
+            $st = $request->string('status')->trim()->toString();
+            if (in_array($st, self::STATUSES, true)) {
+                $query->where('status', $st);
+            }
         }
 
         return $this->exportCsv($query, 'user-ledger', [

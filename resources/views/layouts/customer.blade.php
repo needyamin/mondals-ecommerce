@@ -15,6 +15,7 @@
             document.documentElement.classList.remove('dark')
         }
     </script>
+    @include('partials.marketing-head')
 </head>
 <body class="bg-slate-50 dark:bg-darkbg text-slate-900 dark:text-slate-300 font-sans min-h-screen">
     
@@ -78,5 +79,6 @@
     </div>
 
     @include('partials.footer')
+    @include('partials.marketing-body')
 </body>
 </html>

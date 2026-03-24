@@ -70,8 +70,11 @@
             </div>
         </div>
 
-        <div class="mt-16 pt-8 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center">
-            <p class="text-sm text-slate-500">&copy; {{ date('Y') }} {{ \App\Models\Setting::get('site_name', 'Mondals E-Commerce') }}. All rights reserved.</p>
+        <div class="mt-16 pt-8 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="text-sm text-slate-500 text-center md:text-left space-y-1">
+                <p>&copy; {{ date('Y') }} {{ \App\Models\Setting::get('site_name', 'Mondals E-Commerce') }}. All rights reserved.</p>
+                <p>Software made and copyright by <a href="https://inside.ansnew.com/" target="_blank" rel="noopener noreferrer" class="text-primary dark:text-indigo-400 font-medium hover:underline">ANSNEW TECH.</a></p>
+            </div>
             
             <!-- Payment Icons -->
             <div class="flex space-x-2 mt-4 md:mt-0">

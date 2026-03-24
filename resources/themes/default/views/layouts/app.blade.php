@@ -20,6 +20,8 @@
         }
     </script>
 
+    @include('partials.marketing-head')
+
     @stack('styles')
 </head>
 <body x-data="{ darkMode: localStorage.getItem('theme') === 'dark', mobileMenuOpen: false }" 
@@ -37,6 +39,7 @@
     <!-- Footer -->
     @include('partials.footer')
 
+    @include('partials.marketing-body')
     @stack('scripts')
 </body>
 </html>

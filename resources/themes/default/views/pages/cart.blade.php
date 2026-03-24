@@ -59,7 +59,7 @@
                             <div class="sm:col-span-6 flex items-center space-x-6">
                                 <div class="w-24 h-24 bg-slate-100 dark:bg-slate-800 rounded-2xl flex-shrink-0 flex items-center justify-center overflow-hidden border border-slate-200 dark:border-slate-700">
                                     @if($product->primary_image)
-                                        <img src="{{ asset('storage/' . $product->primary_image) }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
+                                        <img src="{{ $product->display_image }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
                                     @else
                                         <svg class="w-10 h-10 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
                                     @endif

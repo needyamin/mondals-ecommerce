@@ -12,6 +12,12 @@
         <p class="text-slate-500 dark:text-slate-400 text-center md:text-left">Complete your order by filling in the delivery details below.</p>
     </div>
 
+    @if(session('success'))
+        <div class="mb-6 p-4 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-sm font-medium">
+            {{ session('success') }}
+        </div>
+    @endif
+
     @if(session('error'))
         <div class="mb-6 p-4 rounded-xl bg-rose-50 dark:bg-rose-900/30 border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 flex items-center shadow-sm">
             <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>
@@ -35,6 +41,10 @@
             </ul>
         </div>
     @endif
+
+    {{-- Not nested in checkout: otherwise Apply triggers HTML5 validation on shipping fields --}}
+    <form id="checkoutCouponApply" action="{{ route('cart.coupon.apply') }}" method="POST" hidden aria-hidden="true">@csrf</form>
+    <form id="checkoutCouponRemove" action="{{ route('cart.coupon.remove') }}" method="POST" hidden aria-hidden="true">@csrf</form>
 
     <form action="{{ route('checkout.place') }}" method="POST" id="checkoutForm">
         @csrf
@@ -166,6 +176,41 @@
                     </div>
                 </div>
 
+                <!-- Promo code -->
+                <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm p-8">
+                    <h3 class="text-xl font-bold font-heading text-slate-900 dark:text-white mb-6 flex items-center">
+                        <svg class="w-6 h-6 mr-3 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"/></svg>
+                        Promo code
+                    </h3>
+                    @if($cart->coupon)
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 rounded-2xl border-2 border-emerald-200 dark:border-emerald-800/80 bg-emerald-50/60 dark:bg-emerald-950/30">
+                            <div>
+                                <p class="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Applied</p>
+                                <p class="text-lg font-black font-mono text-slate-900 dark:text-white mt-1">{{ $cart->coupon->code }}</p>
+                                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                                    @if($freeShippingCoupon) Free shipping on this order. @else You’re saving ৳{{ number_format($discountAmount, 2) }} on this order. @endif
+                                </p>
+                            </div>
+                            <button type="submit" form="checkoutCouponRemove" class="w-full sm:w-auto px-5 py-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-600 text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0">
+                                Remove code
+                            </button>
+                        </div>
+                    @else
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <div class="flex-1">
+                                <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Have a coupon?</label>
+                                <input form="checkoutCouponApply" type="text" name="code" value="{{ old('code') }}" placeholder="e.g. WELCOME10" autocomplete="off"
+                                    class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white font-mono text-sm uppercase tracking-wide focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                            </div>
+                            <div class="flex items-end">
+                                <button type="submit" form="checkoutCouponApply" class="w-full sm:w-auto px-8 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold shadow-lg shadow-indigo-500/25 transition-colors">
+                                    Apply
+                                </button>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+
                 <!-- Order Notes -->
                 <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm p-8">
                     <h3 class="text-xl font-bold font-heading text-slate-900 dark:text-white mb-4">Order Notes</h3>
@@ -177,14 +222,21 @@
             <div class="lg:w-1/3">
                 <div class="glass-panel p-8 rounded-3xl sticky top-28 border border-white/40 dark:border-slate-700 bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900">
                     <h3 class="text-2xl font-bold font-heading text-slate-900 dark:text-white mb-6 border-b border-slate-200 dark:border-slate-700 pb-4">Your Order</h3>
-                    
+
+                    @if($cart->coupon)
+                        <div class="mb-6 p-4 rounded-2xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/40 dark:bg-emerald-950/20">
+                            <p class="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-widest">Promo active</p>
+                            <p class="font-mono font-bold text-slate-900 dark:text-white mt-1">{{ $cart->coupon->code }}</p>
+                        </div>
+                    @endif
+
                     <div class="space-y-4 mb-6 max-h-60 overflow-y-auto">
                         @foreach($cart->items as $item)
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center space-x-3 flex-1 min-w-0">
                                     <div class="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-lg flex-shrink-0 overflow-hidden border border-slate-200 dark:border-slate-700">
                                         @if($item->product && $item->product->primary_image)
-                                            <img src="{{ asset('storage/' . $item->product->primary_image) }}" class="w-full h-full object-cover">
+                                            <img src="{{ $item->product->display_image }}" alt="" class="w-full h-full object-cover">
                                         @else
                                             <div class="w-full h-full flex items-center justify-center text-slate-400">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
@@ -206,6 +258,15 @@
                             <span>Subtotal</span>
                             <span class="font-medium">৳{{ number_format($subtotal, 2) }}</span>
                         </div>
+                        @if($discountAmount > 0)
+                        <div class="flex justify-between text-sm text-emerald-600 dark:text-emerald-400">
+                            <span>Discount</span>
+                            <span class="font-medium">-৳{{ number_format($discountAmount, 2) }}</span>
+                        </div>
+                        @endif
+                        @if($freeShippingCoupon)
+                        <p class="text-xs text-emerald-600 dark:text-emerald-400">Free shipping with this coupon</p>
+                        @endif
                         <div class="flex justify-between text-sm text-slate-600 dark:text-slate-400">
                             <span>Shipping</span>
                             <span class="font-medium text-emerald-600" id="shipping_display">Select method</span>
@@ -233,7 +294,9 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const subtotal = {{ $subtotal }};
+    const subtotal = {{ (float) $subtotal }};
+    const discount = {{ (float) $discountAmount }};
+    const freeShippingCoupon = {{ $freeShippingCoupon ? 'true' : 'false' }};
     const shippingDisplay = document.getElementById('shipping_display');
     const totalDisplay = document.getElementById('total_display');
     const shippingRadios = document.querySelectorAll('.shipping-radio');
@@ -241,14 +304,21 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateTotals() {
         const selected = document.querySelector('.shipping-radio:checked');
         if (selected) {
-            const cost = parseFloat(selected.dataset.cost) || 0;
-            shippingDisplay.textContent = cost > 0 ? '৳' + cost.toFixed(0) : 'Free';
-            totalDisplay.textContent = '৳' + (subtotal + cost).toLocaleString('en-BD', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            let cost = parseFloat(selected.dataset.cost) || 0;
+            if (freeShippingCoupon) {
+                cost = 0;
+                shippingDisplay.textContent = 'Free (coupon)';
+            } else {
+                shippingDisplay.textContent = cost > 0 ? '৳' + cost.toFixed(0) : 'Free';
+            }
+            const afterDiscount = Math.max(0, subtotal - discount);
+            const total = afterDiscount + cost;
+            totalDisplay.textContent = '৳' + total.toLocaleString('en-BD', {minimumFractionDigits: 2, maximumFractionDigits: 2});
         }
     }
 
     shippingRadios.forEach(radio => radio.addEventListener('change', updateTotals));
-    updateTotals(); // Initial calculation
+    updateTotals();
 });
 </script>
 @endsection

@@ -17,7 +17,7 @@ class Product extends Model
     public function getDisplayImageAttribute(): string
     {
         $path = $this->getPrimaryImageAttribute();
-        return $this->getFallbackImage($path, $this->name, '400x400');
+        return $this->getFallbackImage($path, $this->name, '400x400', 'image', 'products');
     }
 
 

@@ -30,7 +30,7 @@
                         <div class="d-flex align-items-center">
                             <div class="border rounded overflow-hidden flex-shrink-0 me-3" style="width: 52px; height: 52px;">
                                 @if($item->product && $item->product->primary_image)
-                                    <img src="{{ asset('storage/' . $item->product->primary_image) }}" class="w-100 h-100" style="object-fit: cover;">
+                                    <img src="{{ $item->product->display_image }}" alt="" class="w-100 h-100" style="object-fit: cover;">
                                 @else
                                     <div class="bg-light w-100 h-100 d-flex align-items-center justify-content-center"><i class="bi bi-image text-muted"></i></div>
                                 @endif
@@ -78,4 +78,7 @@
         </div>
     </div>
 </div>
+@push('scripts')
+    @include('partials.marketing-purchase', ['order' => $order])
+@endpush
 @endsection

@@ -19,14 +19,33 @@ class VendorController extends Controller
         $query = Vendor::with('user')->withCount('products', 'orders');
 
         if ($search = $request->input('search')) {
-            $query->where(fn($q) => $q->where('store_name', 'LIKE', "%{$search}%")->orWhere('email', 'LIKE', "%{$search}%"));
+            $query->where(function ($q) use ($search) {
+                $q->where('store_name', 'LIKE', "%{$search}%")
+                    ->orWhere('email', 'LIKE', "%{$search}%")
+                    ->orWhereHas('user', function ($uq) use ($search) {
+                        $uq->where('name', 'LIKE', "%{$search}%")
+                            ->orWhere('email', 'LIKE', "%{$search}%");
+                    });
+            });
         }
-        if ($status = $request->input('status')) {
-            $query->where('status', $status);
+        if ($request->filled('status')) {
+            $st = $request->string('status')->trim()->toString();
+            if (in_array($st, ['approved', 'pending', 'suspended', 'rejected'], true)) {
+                $query->where('status', $st);
+            }
         }
 
         $vendors = $query->latest()->paginate(20)->withQueryString();
-        return view('admin.vendors.index', compact('vendors'));
+
+        $stats = [
+            'total'     => Vendor::count(),
+            'approved'  => Vendor::where('status', 'approved')->count(),
+            'pending'   => Vendor::where('status', 'pending')->count(),
+            'suspended' => Vendor::where('status', 'suspended')->count(),
+            'rejected'  => Vendor::where('status', 'rejected')->count(),
+        ];
+
+        return view('admin.vendors.index', compact('vendors', 'stats'));
     }
 
     /**
@@ -142,19 +161,22 @@ class VendorController extends Controller
 
     public function export(Request $request)
     {
-        $query = Vendor::with('user');
+        $query = Vendor::with('user')->withCount('products');
         
         if ($search = $request->input('search')) {
-            $query->where(fn($q) => $q->where('store_name', 'LIKE', "%{$search}%")->orWhere('store_email', 'LIKE', "%{$search}%"));
+            $query->where(fn($q) => $q->where('store_name', 'LIKE', "%{$search}%")->orWhere('email', 'LIKE', "%{$search}%"));
         }
-        if ($status = $request->input('status')) {
-            $query->where('status', $status);
+        if ($request->filled('status')) {
+            $st = $request->string('status')->trim()->toString();
+            if (in_array($st, ['approved', 'pending', 'suspended', 'rejected'], true)) {
+                $query->where('status', $st);
+            }
         }
 
         return $this->exportCsv($query, 'vendor-directory', [
             'Store Name'    => 'store_name',
             'Legal Name'    => 'user.name',
-            'Store Email'   => 'store_email',
+            'Store Email'   => 'email',
             'Phone'         => 'phone',
             'Status'        => 'status',
             'Commission'    => fn($v) => $v->commission_rate . '%',

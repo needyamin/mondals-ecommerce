@@ -145,4 +145,23 @@ class CartController extends Controller
         }
         return back()->with('success', 'Cart cleared.');
     }
+
+    public function applyCoupon(Request $request)
+    {
+        $request->validate(['code' => 'required|string|max:50']);
+
+        try {
+            $this->cartService->applyCoupon($request->code);
+            return back()->with('success', 'Coupon applied.');
+        } catch (ValidationException $e) {
+            return back()->withErrors($e->errors());
+        }
+    }
+
+    public function removeCoupon()
+    {
+        $this->cartService->removeCoupon();
+
+        return back()->with('success', 'Coupon removed.');
+    }
 }

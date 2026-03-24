@@ -79,6 +79,17 @@
                             <input type="number" step="0.01" name="max_discount_amount" value="{{ old('max_discount_amount', $item->max_discount_amount ?? '') }}" class="w-full px-6 py-4 bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl text-base focus:ring-2 focus:ring-emerald-500 shadow-inner font-bold text-slate-900 dark:text-white">
                         </div>
                     </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="space-y-3">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Total use limit (blank = unlimited)</label>
+                            <input type="number" min="0" name="usage_limit" value="{{ old('usage_limit', $item->usage_limit ?? '') }}" placeholder="e.g. 100" class="w-full px-6 py-4 bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl text-base focus:ring-2 focus:ring-emerald-500 shadow-inner font-bold text-slate-900 dark:text-white">
+                        </div>
+                        <div class="space-y-3">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Per-user limit (blank = unlimited)</label>
+                            <input type="number" min="0" name="usage_limit_per_user" value="{{ old('usage_limit_per_user', $item->usage_limit_per_user ?? '') }}" placeholder="e.g. 1" class="w-full px-6 py-4 bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl text-base focus:ring-2 focus:ring-emerald-500 shadow-inner font-bold text-slate-900 dark:text-white">
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

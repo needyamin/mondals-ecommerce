@@ -31,6 +31,13 @@ class OrderController extends Controller
                   ->orWhereHas('user', fn($q2) => $q2->where('name', 'LIKE', "%{$search}%")->orWhere('email', 'LIKE', "%{$search}%"));
             });
         }
+        if ($request->filled('user_id')) {
+            $uid = (int) $request->input('user_id');
+            if ($uid > 0) {
+                $query->where('user_id', $uid);
+            }
+        }
+
         return $query;
     }
 

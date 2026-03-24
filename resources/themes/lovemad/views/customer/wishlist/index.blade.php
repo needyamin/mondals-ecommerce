@@ -14,7 +14,7 @@
             <div class="bg-white shadow-sm h-100 d-flex flex-column product-card-lm position-relative" style="border-radius: 4px; overflow: hidden;">
                 <div class="position-relative bg-light" style="aspect-ratio: 1/1;">
                     @if($item->product->primary_image)
-                    <img src="{{ asset('storage/' . $item->product->primary_image) }}" class="w-100 h-100 object-fit-cover">
+                    <img src="{{ $item->product->display_image }}" alt="" class="w-100 h-100 object-fit-cover">
                     @else
                     <div class="w-100 h-100 d-flex align-items-center justify-content-center text-muted opacity-25">
                         <i class="bi bi-image" style="font-size: 3rem;"></i>

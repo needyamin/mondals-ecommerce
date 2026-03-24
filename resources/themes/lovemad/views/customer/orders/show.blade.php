@@ -41,7 +41,7 @@
                 <div class="list-group-item p-4 d-flex align-items-center">
                     <div class="border rounded me-3 flex-shrink-0 bg-light d-flex justify-content-center align-items-center" style="width: 60px; height: 60px; overflow: hidden;">
                         @if($item->product && $item->product->primary_image)
-                        <img src="{{ asset('storage/' . $item->product->primary_image) }}" class="w-100 h-100 object-fit-cover">
+                        <img src="{{ $item->product->display_image }}" alt="" class="w-100 h-100 object-fit-cover">
                         @else
                         <i class="bi bi-image text-muted opacity-50"></i>
                         @endif

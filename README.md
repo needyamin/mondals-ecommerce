@@ -1,22 +1,34 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" alt="Laravel Logo" width="300">
+  <img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" alt="Mondal's E-Commerce" width="300">
   <h1>Mondal's E-Commerce Architecture</h1>
   <p><b>An exhaustive, enterprise-grade multi-tenant platform built on Laravel 11.</b></p>
   
-  [![PHP Version](https://img.shields.io/badge/PHP-8.2%2B-blue.svg)](https://php.net)
-  [![Laravel](https://img.shields.io/badge/Laravel-11.x-red.svg)](https://laravel.com)
-  [![License](https://img.shields.io/badge/License-Proprietary-yellow.svg)]()
+  [![PHP Version](https://img.shields.io/badge/PHP-8.2%2B-blue.svg?style=for-the-badge&logo=php)](https://php.net)
+  [![Laravel](https://img.shields.io/badge/Laravel-11.x-red.svg?style=for-the-badge&logo=laravel)](https://laravel.com)
+  [![Database](https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white)]()
+  [![Deployment](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)]()
+  [![License](https://img.shields.io/badge/License-Proprietary-yellow.svg?style=for-the-badge)]()
 </div>
 
 ---
 
 ## 📖 Executive Overview
 
-Mondal's Engine is designed to facilitate a robust multi-vendor ecosystem. It isolates structural logic between native **Customers**, **Vendors**, and **Platform Administrators**. To ensure infinite scalability without altering core framework files, the platform utilizes custom decoupled **Theme** and **Plugin** engines, alongside a completely mapped **RESTful API v1** utilizing Sanctum.
+**Mondal's Engine** is a high-performance multi-vendor ecosystem. It isolates logic between **Customers**, **Vendors**, and **Platform Administrators** while supporting infinite scalability. 
+
+The core mission is zero framework-level modifications. This is achieved via a custom decoupled **Theme Engine** (powered by the premium `lovemad` theme) and a ZIP-based **Plugin Engine**, alongside a strict **RESTful API v1** authenticated via Laravel Sanctum.
+
+### ✨ What's New in v1.1.0 (March 2026)
+- 🎨 **`lovemad` Premium Theme:** A modern, high-conversion default storefront.
+- 🖼️ **`HasFallbackImage` Engine:** Deterministic, colorful placeholders for missing assets using UI Avatars & Placehold.co.
+- 🚢 **Unified Deployment:** One-click deployment script (`deploy.sh`) supporting Docker Compose, K8s, and Cloudflare Tunnels (GHA integration).
+- 🧹 **Plugin Purge:** Enhanced plugin lifecycle management with physical disk cleanup.
 
 ---
 
-<img width="1920" height="3139" alt="Image" src="https://github.com/user-attachments/assets/66045b2d-83ca-408e-9799-38c240cc2ba0" />
+<img width="1920" height="auto" alt="Architecture Overview" src="https://github.com/user-attachments/assets/66045b2d-83ca-408e-9799-38c240cc2ba0" />
+
+---
 
 ## 🧱 Core Application Architecture (MVC+)
 
@@ -25,163 +37,106 @@ The architecture heavily abstracts standard logic. Code is organized using deepl
 ```text
 c:\laragon\www\MondalsEcommerce\
 ├── app/
-│   ├── Http/
-│   │   ├── Controllers/
-│   │   │   ├── Admin/         # Secure CMS, vendor approvals, global order pipeline
-│   │   │   ├── Api/V1/        # 100% JSON serialized strict headless endpoints
-│   │   │   ├── Auth/          # Cookie/Session & Sanctum bearer token factories
-│   │   │   ├── Storefront/    # Cart state manipulation, product browsing
-│   │   │   └── Vendor/        # Scoped vendor dashboard and localized catalogs
-│   │   └── Middleware/        # Guards: EnsureUserIsAdmin, EnsureUserIsVendor
-│   ├── Models/                # Eloquent definitions (with Filterable, HasSlug Traits)
-│   ├── Providers/             # Registers Core singletons (ThemeServiceProvider)
-│   └── Services/              
-│       ├── ThemeManager.php   # Handles active theme view mapping & asset symlinks
-│       └── PluginManager.php  # Discovers, installs, and boots ZIP plugin ecosystems
-├── database/
-│   └── migrations/            # Strict MySQL ENUM schemas & SQLite compatible indexes
-├── plugins/                   # Extracted ZIP extensions
-│   ├── bkash-payment/         # Tokenized bKash Checkout (v1.2.0-beta)
-│   ├── pathao/                # Dynamic shipping rates via Pathao API
-│   └── flat-rate-shipping/    # Zone-based configurable shipping
+│   ├── Http/Controllers/
+│   │   ├── Admin/         # Secure CMS, vendor approvals, global order pipeline
+│   │   ├── Api/V1/        # 100% JSON serialized strict headless endpoints
+│   │   ├── Storefront/    # Cart state manipulation, product browsing
+│   │   └── Vendor/        # Scoped vendor dashboard and localized catalogs
+│   ├── Providers/         # Registers Core singletons (ThemeServiceProvider)
+│   ├── Services/              
+│   │   ├── ThemeManager.php   # Handles active theme view mapping & asset symlinks
+│   │   └── PluginManager.php  # Discovers, installs, and boots ZIP plugin ecosystems
+│   └── Traits/
+│       ├── HasFallbackImage.php # Deterministic placeholders for missing media
+│       └── Filterable.php       # Query-based Eloquent filtering
+├── plugins/               # Extracted ZIP extensions (bKash, Pathao, etc.)
 ├── resources/
-│   ├── themes/                # Root array for Swappable frontend blade files
-│   └── views/                 # Administrative & Vendor Core UI (Tailwind based)
-└── routes/
-    ├── api.php                # Headless API pipeline
-    └── web.php                # Browser based interactions (includes Plugin Purging)
+│   ├── themes/            # Root array for Swappable frontend blade files (e.g., lovemad)
+│   └── views/             # Administrative & Vendor Core UI (Tailwind based)
+└── scripts/               # Automation: deploy.sh, setup-server.sh
 ```
 
 ---
 
 ## 💾 Database Schemas & Strict Enums
 
-To prevent catastrophic financial mapping errors, E-Commerce statuses do **not** use open strings. They rely on strictly enforced database Enums natively migrated into the `orders` table.
+To prevent financial mapping errors, order statuses are strictly enforced database Enums.
 
 ### Physical Fulfillment (`status`)
-*   `pending`: Default state on order receive.
-*   `confirmed`, `processing`, `shipped`: Transit stages.
-*   `delivered`: Package handed off.
-*   `completed`: Finalized.
+*   `pending` ➡️ `confirmed` ➡️ `processing` ➡️ `shipped` ➡️ `delivered` ➡️ `completed`
 *   `cancelled`: Order aborted.
 
 ### Financial Settlement (`payment_status`)
 *   `pending`: Awaiting gateway confirmation.
 *   `paid`: Cleared financial transaction.
-*   `refunded`: Capital reverted to customer.
-*   `failed`: Gateway or manual rejection.
-
-> ⚠️ **Note:** Updating order states natively validates against these ENUM constants.
+*   `refunded`: Capital reverted.
+*   `failed`: Rejection or timeout.
 
 ---
 
 ## 🔌 Extensibility Ecosystem
 
 ### 1. ThemeManager Service
-Mondal's engine replaces Laravel's native view mapping with a dynamic array priority system.
-*   **Location:** `resources/themes/{theme_id}`
-*   **Function:** `ThemeServiceProvider` searches the `settings` table for an active theme string. It uses `View::prependNamespace()` to force Blade to look inside the active theme folder before using system defaults.
-*   **Assets:** CSS and JS placed in a theme's `assets/` directory are auto-symlinked to the public folder. In Blade files, strictly use `{{ @themeAsset('css/main.css') }}` to dynamically load resources without breaking logic.
+Mondal's engine replaces Laravel's native view mapping.
+*   **Active Theme:** Defined in the `settings` table.
+*   **Assets:** CSS/JS in `resources/themes/{theme}/assets/` are auto-symlinked to `public/themes/{theme}/`.
+*   **Development:** Use `{{ @themeAsset('css/main.css') }}` for dynamic loading.
 
 ### 2. PluginManager Engine
-The ecosystem supports "Drag-and-Drop" ZIP plugin additions for extending gateways or logic.
-*   **Lifecycle:** Upload (`plugins/`) → Discover (reads `plugin.json` to DB) → Install (executes internal DB migrations) → Enable (Providers boot up) → **Purge** (Complete removal from disk).
-*   **Dynamic Settings:** If a plugin ZIP contains a `views/settings.blade.php` (or as defined in `plugin.json`), the Admin Dashboard intelligently intercepts it and renders a "Configure" window automatically!
-*   **Hook System:** Standardized hooks like `register_shipping_methods` and `register_payment_gateways` allow plugins to inject checkout options dynamically.
+Support for "Drag-and-Drop" ZIP plugin additions.
+*   **Lifecycle:** Upload ➡️ Discover ➡️ Install (Migrations) ➡️ Enable ➡️ **Purge** (Total removal).
+*   **Hooks:** `register_shipping_methods`, `register_payment_gateways`.
 
 ---
 
-## 💳 Payment & Shipping Integrations
+## 🚢 Smart Deployment Ecosystem
 
-### 1. bKash Tokenized Checkout
-A production-ready integration for **bKash Tokenized Checkout (v1.2.0-beta)**. 
-*   **Security:** Utilizes `X-APP-Key` and `Bearer` tokenization for every request.
-*   **Logic:** Handles `create`, `execute`, and `query` payment status flows natively.
-*   **Callback:** Supports dynamic `IPN` and `callbackURL` resolution via `APP_URL`.
+Deploying Mondal's E-Commerce is now simpler and more robust than ever.
 
-### 2. Unified Shipping Strategy
-The engine consolidates DB-based methods and Plugin-based methods into a single `availShipping` collection. 
-*   **Prioritization:** Injected plugins (e.g., Pathao) take precedence over legacy seeded methods.
-*   **Config:** All rates are calculated based on Plugin Settings (e.g. `inside_city_rate`) fetched in real-time.
+### 🐧 The One-Click Deployment
+The `scripts/deploy.sh` script handles everything:
+- Git synchronization and ownership fixes.
+- Docker container builds and health checks.
+- Automated migrations, caching, and permission hardening.
+- **Direct Public Storage:** Optimized for cloud serving (Cloudflare Tunnel ready).
 
-## 🌐 Complete REST API v1 Specification
-
-All paths are prefixed with `/api/v1/`.
-
-### 🔓 Public Catalog & Authentication
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/register` | Validates user array, returns User + Sanctum Bearer Token |
-| `POST` | `/login` | Trades credentials for Sanctum Session array |
-| `GET` | `/categories/tree` | Returns deeply nested JSON mapping of active categories |
-| `GET` | `/products` | Paginated index supporting queries: `?q=&sort=&category=` |
-| `GET` | `/products/{slug}`| Details variant arrays and reviews mapped to product |
-
-### 🔒 Protected Interactions (Requires `Bearer {token}`)
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/addresses` | Inserts unified billing/shipping nodes into user profile |
-| `GET` | `/cart` | Re-calculates Session variables, applies tax logic natively |
-| `POST` | `/cart/items` | Adds `product_id, quantity` checking inventory constraints |
-| `POST` | `/checkout/calculate` | Estimates weight/distance and applies active coupon modifiers |
-| `POST` | `/checkout/order` | Fires `Order` DB build, kills Cart, generates Transaction rows |
-| `POST` | `/vendor/apply` | Queues user application natively targeting the Admin dashboard |
+Check [README_DEPLOY.md](README_DEPLOY.md) for full server setup instructions.
 
 ---
 
-## 💻 Installation & Setup Protocol
+## 🌐 API Specification v1
+Prefix all paths with `/api/v1/`.
 
-To boot up a local or production instance of the engine:
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/register` | User creation + Sanctum Token returns |
+| `GET` | `/products` | Filterable paginated catalog index |
+| `GET` | `/cart` | Live session-based cart retrieval |
+| `POST` | `/checkout/order` | Finalizes transaction and builds DB records |
 
-**1. Clone the Source Directory**
+---
+
+## 💻 Installation & Setup
+
 ```bash
-git clone https://github.com/needyamin/mondals-ecommerce.git
-cd mondals-ecommerce
-```
+# 1. Clone & Enter
+git clone https://github.com/needyamin/mondals-ecommerce.git && cd mondals-ecommerce
 
-**2. Hydrate Dependencies**
-```bash
-composer install
-npm install && npm run build
-```
+# 2. Hydrate
+composer install && npm install && npm run build
 
-**3. Configure Native Environment**
-```bash
-cp .env.example .env
-php artisan key:generate
-```
-*Modify your `.env` to target your local MySQL or MariaDB instance.*
+# 3. Configure
+cp .env.example .env && php artisan key:generate
 
-**4. Generate Schema & Seed Admin Variables**
-```bash
-php artisan migrate --seed
-```
-*Crucial step: The seeder populates the initial Settings table and active Theme namespaces needed for the Application Provider to boot without 500 errors.*
+# 4. Migrate & Link
+php artisan migrate --seed && php artisan storage:link
 
-**5. Symlink Local Storage**
-```bash
-php artisan storage:link
-```
-
-**6. Start Native Server**
-```bash
+# 5. Boot
 php artisan serve
 ```
 
 ---
 
-## 🧪 E2E Testing Rules
-
-The framework supports extremely fast in-memory SQLite driver tests.
-
-```bash
-php artisan test
-```
-
-> **Important Architecture Fix:** Standard SQLite does not natively support `fullText` index migrations directly off the schema grammar. The migrations (e.g., `2026_03_20_030005_create_products_table`) have been successfully wrapped in `DB::connection()->getDriverName() !== 'sqlite'` checks allowing tests to bypass full-text index compilation while utilizing SQLite memory.
-
----
-
 <p align="center">
-  <small><em>Proprietary Engine crafted by <b>Mondal's E-Commerce Development</b>. Architecture locked for v1.0.0.</em></small>
+  <small><em>Proprietary Engine crafted by <b>Mondal's E-Commerce Development</b>. Version 1.1.0 Stable.</em></small>
 </p>

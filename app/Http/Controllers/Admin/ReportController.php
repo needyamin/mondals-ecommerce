@@ -52,9 +52,24 @@ class ReportController extends Controller
      */
     public function vendors(Request $request)
     {
-        $vendors = Vendor::withCount(['products', 'orders'])
-            ->withSum('earnings', 'vendor_earning')
-            ->get();
+        $query = Vendor::withCount(['products', 'orders'])
+            ->withSum('earnings', 'vendor_earning');
+
+        if ($request->boolean('export')) {
+            return $this->exportCsv($query, 'vendor-accounting-sheet', [
+                'Store Name'    => 'store_name',
+                'Email'         => 'email',
+                'Status'        => 'status',
+                'Phone'         => 'phone',
+                'Commission %'  => 'commission_rate',
+                'Products'      => 'products_count',
+                'Order Lines'   => 'orders_count',
+                'Net Earnings'  => fn ($v) => number_format((float) ($v->earnings_sum_vendor_earning ?? 0), 2, '.', ''),
+                'Registered'    => fn ($v) => $v->created_at?->format('Y-m-d H:i:s'),
+            ]);
+        }
+
+        $vendors = $query->orderBy('store_name')->get();
 
         return view('admin.reports.vendors', compact('vendors'));
     }

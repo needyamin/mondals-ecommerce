@@ -10,7 +10,7 @@
             <p class="text-slate-500 dark:text-slate-400 mt-1">Manage product manufacturer identities and external catalog filtering.</p>
         </div>
         <div class="flex items-center gap-3">
-            <a href="#" class="bg-brand-600 hover:bg-brand-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-brand-500/30 transition flex items-center">
+            <a href="{{ route('admin.brands.create') }}" class="bg-brand-600 hover:bg-brand-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-brand-500/30 transition flex items-center">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                 New Brand
             </a>
@@ -78,7 +78,7 @@
                         </td>
 
                         <td class="px-6 py-4 text-right space-x-2">
-                            <a href="#" class="inline-flex items-center justify-center px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors">Edit</a>
+                            <a href="{{ route('admin.brands.edit', $brand->id) }}" class="inline-flex items-center justify-center px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors">Edit</a>
                             <form action="{{ route('admin.brands.destroy', $brand->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Delete this brand permanently?');">
                                 @csrf
                                 @method('DELETE')

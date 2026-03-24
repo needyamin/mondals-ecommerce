@@ -2,7 +2,7 @@
     <!-- Image -->
     <a href="{{ route('product.detail', $product->slug) }}" class="relative block aspect-[4/5] overflow-hidden bg-slate-100 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-700/50">
         @if($product->primary_image)
-            <img src="{{ asset('storage/' . $product->primary_image) }}" alt="{{ $product->name }}" class="object-cover w-full h-full transition-transform duration-700 group-hover:scale-110">
+            <img src="{{ $product->display_image }}" alt="{{ $product->name }}" class="object-cover w-full h-full transition-transform duration-700 group-hover:scale-110">
         @else
             <!-- Placeholder -->
             <div class="absolute inset-0 flex items-center justify-center text-slate-300 dark:text-slate-700">

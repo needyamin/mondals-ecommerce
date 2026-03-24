@@ -16,24 +16,68 @@ class PayoutController extends Controller
         $this->payoutService = $payoutService;
     }
 
+    /** @var list<string> */
+    private const STATUSES = ['pending', 'processing', 'completed', 'failed', 'cancelled'];
+
     /**
      * List all payouts.
      */
     public function index(Request $request)
     {
-        $payouts = VendorPayout::with('vendor')
-            ->when($request->input('status'), fn($q, $s) => $q->where('status', $s))
-            ->when($request->input('vendor_id'), fn($q, $v) => $q->where('vendor_id', $v))
-            ->latest()
-            ->paginate(15)
-            ->withQueryString();
+        $query = VendorPayout::with('vendor');
 
-        // Get vendors that have unpaid earnings
+        if ($search = trim((string) $request->input('search', ''))) {
+            $query->where(function ($q) use ($search) {
+                $q->where('payout_number', 'LIKE', "%{$search}%")
+                    ->orWhere('transaction_id', 'LIKE', "%{$search}%")
+                    ->orWhereHas('vendor', function ($vq) use ($search) {
+                        $vq->where('store_name', 'LIKE', "%{$search}%")
+                            ->orWhere('email', 'LIKE', "%{$search}%");
+                    });
+            });
+        }
+
+        if ($request->filled('status')) {
+            $st = $request->string('status')->trim()->toString();
+            if (in_array($st, self::STATUSES, true)) {
+                $query->where('status', $st);
+            }
+        }
+
+        if ($request->filled('vendor_id')) {
+            $vid = (int) $request->input('vendor_id');
+            if ($vid > 0 && Vendor::whereKey($vid)->exists()) {
+                $query->where('vendor_id', $vid);
+            }
+        }
+
+        $payouts = $query->latest()->paginate(20)->withQueryString();
+
+        $stats = [
+            'total'       => VendorPayout::count(),
+            'pending'     => VendorPayout::where('status', 'pending')->count(),
+            'processing'  => VendorPayout::where('status', 'processing')->count(),
+            'completed'   => VendorPayout::where('status', 'completed')->count(),
+            'failed'      => VendorPayout::where('status', 'failed')->count(),
+            'cancelled'   => VendorPayout::where('status', 'cancelled')->count(),
+        ];
+
         $vendorsWithBalance = Vendor::whereHas('earnings', fn($q) => $q->unpaid())
             ->withSum(['earnings as unpaid_balance' => fn($q) => $q->unpaid()], 'vendor_earning')
+            ->orderBy('store_name')
             ->get();
 
-        return view('admin.payouts.index', compact('payouts', 'vendorsWithBalance'));
+        $vendorIds = VendorPayout::query()->distinct()->pluck('vendor_id')->filter()->values();
+        $vendorsForFilter = $vendorIds->isEmpty()
+            ? collect()
+            : Vendor::whereIn('id', $vendorIds)->orderBy('store_name')->get();
+
+        return view('admin.payouts.index', compact(
+            'payouts',
+            'vendorsWithBalance',
+            'stats',
+            'vendorsForFilter'
+        ));
     }
 
     /**

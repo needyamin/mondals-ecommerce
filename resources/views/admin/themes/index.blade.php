@@ -10,20 +10,10 @@
             <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white font-heading tracking-tight">Storefront Themes</h2>
             <p class="text-slate-500 dark:text-slate-400 mt-1">Manage the visual appearance of your public-facing marketplace.</p>
         </div>
-        <div class="flex items-center gap-3">
-            <a href="{{ route('admin.themes.customize') }}" class="btn btn-outline bg-white dark:bg-darkpanel border border-brand-200 dark:border-brand-800 text-brand-700 dark:text-brand-400 font-medium px-5 py-2.5 rounded-xl hover:bg-brand-50 dark:hover:bg-brand-900/20 transition flex items-center shadow-sm">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
-                Customize Active Theme
-            </a>
-            <form action="{{ route('admin.themes.upload') }}" method="POST" enctype="multipart/form-data" class="flex items-center gap-2">
-                @csrf
-                <input type="file" name="theme_zip" accept=".zip" required class="text-sm text-slate-500 dark:text-slate-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 dark:file:bg-slate-800 dark:file:text-slate-300 dark:hover:file:bg-slate-700 cursor-pointer">
-                <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-brand-500/30 transition flex items-center">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                    Upload Theme
-                </button>
-            </form>
-        </div>
+        <a href="{{ route('admin.themes.customize') }}" class="inline-flex items-center bg-white dark:bg-darkpanel border border-slate-200 dark:border-slate-700 text-brand-700 dark:text-brand-400 font-medium px-5 py-2.5 rounded-xl hover:bg-brand-50 dark:hover:bg-brand-900/20 transition shadow-sm text-sm">
+            <svg class="w-5 h-5 mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+            Customize active theme
+        </a>
     </div>
 
     @if(session('success'))
@@ -39,6 +29,37 @@
             <span class="font-medium">{{ session('error') }}</span>
         </div>
     @endif
+
+    <div class="mb-8 bg-white dark:bg-darkpanel rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/40">
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white">Upload theme</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">ZIP must contain one folder (theme slug) with <code class="text-xs bg-slate-200/80 dark:bg-slate-700 px-1.5 py-0.5 rounded">theme.json</code> and a <code class="text-xs bg-slate-200/80 dark:bg-slate-700 px-1.5 py-0.5 rounded">views</code> directory. Max 20&nbsp;MB.</p>
+        </div>
+        <form id="theme-upload-form" action="{{ route('admin.themes.upload') }}" method="POST" enctype="multipart/form-data" class="p-6">
+            @csrf
+            <div id="theme-dropzone" class="relative rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-600 bg-slate-50/50 dark:bg-slate-800/30 px-6 py-10 text-center transition-colors hover:border-brand-400 dark:hover:border-brand-500 hover:bg-brand-50/30 dark:hover:bg-brand-900/10">
+                <input type="file" name="theme_zip" id="theme_zip" accept=".zip,application/zip" class="sr-only" required>
+                <label for="theme_zip" class="cursor-pointer block">
+                    <span class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-brand-100 dark:bg-brand-900/40 text-brand-600 dark:text-brand-400 mb-4 mx-auto">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 9L19 13m0 0l-4-4m4 4l-4 4"/></svg>
+                    </span>
+                    <span class="text-sm font-semibold text-slate-900 dark:text-white">Drop a theme .zip here or <span class="text-brand-600 dark:text-brand-400 underline decoration-2 underline-offset-2">browse</span></span>
+                    <span class="block text-xs text-slate-500 dark:text-slate-400 mt-2">Only <strong>.zip</strong> — extracted into <code class="text-[11px] bg-slate-200/80 dark:bg-slate-700 px-1 rounded">resources/themes/</code></span>
+                </label>
+                <p id="theme-zip-name" class="mt-4 text-sm font-medium text-brand-600 dark:text-brand-400 min-h-[1.25rem]"></p>
+            </div>
+            @error('theme_zip')
+                <p class="mt-3 text-sm font-medium text-rose-600 dark:text-rose-400">{{ $message }}</p>
+            @enderror
+            <div class="mt-6 flex flex-wrap items-center gap-3">
+                <button type="submit" class="inline-flex items-center bg-brand-600 hover:bg-brand-700 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-lg shadow-brand-500/25 transition">
+                    <svg class="w-5 h-5 mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                    Install theme
+                </button>
+                <button type="button" id="theme-zip-clear" class="text-sm font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 px-3 py-2 hidden">Clear file</button>
+            </div>
+        </form>
+    </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         @forelse($themes as $index => $themeData)
@@ -122,5 +143,55 @@
             </div>
         @endforelse
     </div>
+
+    <script>
+    (function () {
+        var input = document.getElementById('theme_zip');
+        var drop = document.getElementById('theme-dropzone');
+        var nameEl = document.getElementById('theme-zip-name');
+        var clearBtn = document.getElementById('theme-zip-clear');
+        if (!input || !drop) return;
+
+        function setFile(file) {
+            if (!file || !file.name.toLowerCase().endsWith('.zip')) return;
+            var dt = new DataTransfer();
+            dt.items.add(file);
+            input.files = dt.files;
+            nameEl.textContent = file.name;
+            clearBtn.classList.remove('hidden');
+        }
+
+        input.addEventListener('change', function () {
+            var f = this.files && this.files[0];
+            if (f) { nameEl.textContent = f.name; clearBtn.classList.remove('hidden'); }
+            else { nameEl.textContent = ''; clearBtn.classList.add('hidden'); }
+        });
+
+        clearBtn.addEventListener('click', function () {
+            input.value = '';
+            nameEl.textContent = '';
+            clearBtn.classList.add('hidden');
+        });
+
+        ['dragenter', 'dragover'].forEach(function (ev) {
+            drop.addEventListener(ev, function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                drop.classList.add('border-brand-500', 'bg-brand-50/50', 'dark:bg-brand-900/20');
+            });
+        });
+        ['dragleave', 'drop'].forEach(function (ev) {
+            drop.addEventListener(ev, function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                drop.classList.remove('border-brand-500', 'bg-brand-50/50', 'dark:bg-brand-900/20');
+            });
+        });
+        drop.addEventListener('drop', function (e) {
+            var f = e.dataTransfer.files && e.dataTransfer.files[0];
+            if (f) setFile(f);
+        });
+    })();
+    </script>
 
 @endsection

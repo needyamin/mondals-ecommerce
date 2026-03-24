@@ -16,6 +16,8 @@ Route::post('/cart/clear', [\App\Http\Controllers\CartController::class, 'clear'
 
 // Checkout (requires login)
 Route::middleware('auth')->group(function () {
+    Route::post('/cart/coupon', [\App\Http\Controllers\CartController::class, 'applyCoupon'])->name('cart.coupon.apply');
+    Route::post('/cart/coupon/remove', [\App\Http\Controllers\CartController::class, 'removeCoupon'])->name('cart.coupon.remove');
     Route::get('/checkout', [\App\Http\Controllers\CheckoutController::class, 'index'])->name('checkout');
     Route::post('/checkout/place-order', [\App\Http\Controllers\CheckoutController::class, 'placeOrder'])->name('checkout.place');
     Route::get('/order/confirmation/{orderNumber}', [\App\Http\Controllers\CheckoutController::class, 'confirmation'])->name('order.confirmation');
@@ -113,6 +115,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Reports
     Route::get('/reports/sales', [\App\Http\Controllers\Admin\ReportController::class, 'sales'])->name('reports.sales');
     Route::get('/reports/vendors', [\App\Http\Controllers\Admin\ReportController::class, 'vendors'])->name('reports.vendors');
+
+    Route::get('/storage/product-uploads', [\App\Http\Controllers\Admin\StorageSettingsController::class, 'edit'])->name('storage.edit');
+    Route::post('/storage/product-uploads', [\App\Http\Controllers\Admin\StorageSettingsController::class, 'update'])->name('storage.update');
+
+    Route::get('/marketing', [\App\Http\Controllers\Admin\MarketingTrackingController::class, 'edit'])->name('marketing.edit');
+    Route::put('/marketing', [\App\Http\Controllers\Admin\MarketingTrackingController::class, 'update'])->name('marketing.update');
 
     // Themes
     Route::get('/themes', [\App\Http\Controllers\Admin\ThemeController::class, 'index'])->name('themes.index');

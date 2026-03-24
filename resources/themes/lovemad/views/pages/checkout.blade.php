@@ -13,6 +13,11 @@
         </ol>
     </nav>
 
+    @if(session('success'))
+        <div class="alert alert-success border-0 shadow-sm rounded-0 py-2 mb-3" style="font-size: 13px;">
+            <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
+        </div>
+    @endif
     @if(session('error'))
         <div class="alert alert-danger border-0 shadow-sm rounded-0 py-2 mb-3" style="font-size: 13px;">
             <i class="bi bi-exclamation-circle-fill me-2"></i> {{ session('error') }}
@@ -32,6 +37,9 @@
             </ul>
         </div>
     @endif
+
+    <form id="checkoutCouponApply" action="{{ route('cart.coupon.apply') }}" method="POST" hidden aria-hidden="true">@csrf</form>
+    <form id="checkoutCouponRemove" action="{{ route('cart.coupon.remove') }}" method="POST" hidden aria-hidden="true">@csrf</form>
 
     <form action="{{ route('checkout.place') }}" method="POST" id="checkoutForm">
         @csrf
@@ -132,6 +140,32 @@
                     </div>
                 </div>
 
+                {{-- Promo code --}}
+                <div class="bg-white shadow-sm p-4 mb-3" style="border-radius: 4px;">
+                    <h5 class="fw-bold mb-4 d-flex align-items-center" style="font-size: 16px;">
+                        <i class="bi bi-tag-fill text-primary me-2 fs-5"></i> Promo code
+                    </h5>
+                    @if($cart->coupon)
+                        <div class="p-3 d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between gap-3" style="background: var(--lm-orange-soft); border: 2px solid var(--lm-primary); border-radius: 4px;">
+                            <div>
+                                <div class="text-uppercase fw-bold text-muted" style="font-size: 10px; letter-spacing: .08em;">Applied</div>
+                                <div class="fw-bold font-monospace mt-1" style="font-size: 15px;">{{ $cart->coupon->code }}</div>
+                                <div class="text-muted mt-1" style="font-size: 12px;">
+                                    @if($freeShippingCoupon) Free shipping on this order. @else Saving ৳{{ number_format($discountAmount, 2) }} on this order. @endif
+                                </div>
+                            </div>
+                            <button type="submit" form="checkoutCouponRemove" class="btn btn-outline-secondary btn-sm fw-bold px-4 align-self-stretch align-self-sm-end" style="border-radius: 2px; font-size: 12px;">Remove</button>
+                        </div>
+                    @else
+                        <label class="form-label small fw-bold text-muted mb-2">Have a coupon?</label>
+                        <div class="input-group input-group-lg" style="font-size: 13px;">
+                            <input form="checkoutCouponApply" type="text" name="code" value="{{ old('code') }}" placeholder="Enter code" autocomplete="off"
+                                   class="form-control bg-light border-0 shadow-none text-uppercase font-monospace" style="padding: 10px 14px; font-size: 13px;">
+                            <button type="submit" form="checkoutCouponApply" class="btn text-white fw-bold px-4" style="background: var(--lm-primary); border-radius: 0 2px 2px 0; font-size: 13px;">Apply</button>
+                        </div>
+                    @endif
+                </div>
+
                 {{-- Order Notes --}}
                 <div class="bg-white shadow-sm p-4 mb-3" style="border-radius: 4px;">
                     <h5 class="fw-bold mb-3" style="font-size: 16px;">Order Notes</h5>
@@ -144,12 +178,19 @@
                 <div class="bg-white shadow-sm p-4 sticky-top" style="border-radius: 4px; top: 120px;">
                     <h5 class="fw-bold mb-4 pb-3 border-bottom" style="font-size: 16px;">Your Order</h5>
 
+                    @if($cart->coupon)
+                        <div class="mb-3 p-2 px-3" style="background: var(--lm-orange-soft); border-left: 3px solid var(--lm-primary); font-size: 12px;">
+                            <span class="text-muted text-uppercase fw-bold" style="font-size: 9px; letter-spacing: .06em;">Promo</span>
+                            <span class="fw-bold font-monospace ms-2">{{ $cart->coupon->code }}</span>
+                        </div>
+                    @endif
+
                     <div class="mb-4" style="max-height: 250px; overflow-y: auto;">
                         @foreach($cart->items as $item)
                             <div class="d-flex align-items-center mb-3">
                                 <div class="border rounded overflow-hidden flex-shrink-0 me-2" style="width: 44px; height: 44px;">
                                     @if($item->product && $item->product->primary_image)
-                                        <img src="{{ asset('storage/' . $item->product->primary_image) }}" class="w-100 h-100" style="object-fit: cover;">
+                                        <img src="{{ $item->product->display_image }}" alt="" class="w-100 h-100" style="object-fit: cover;">
                                     @else
                                         <div class="bg-light w-100 h-100 d-flex align-items-center justify-content-center"><i class="bi bi-image text-muted small"></i></div>
                                     @endif
@@ -168,6 +209,15 @@
                             <span class="text-muted">Subtotal</span>
                             <span class="fw-medium">৳{{ number_format($subtotal, 2) }}</span>
                         </div>
+                        @if($discountAmount > 0)
+                        <div class="d-flex justify-content-between mb-2 text-success" style="font-size: 13px;">
+                            <span>Discount</span>
+                            <span class="fw-medium">-৳{{ number_format($discountAmount, 2) }}</span>
+                        </div>
+                        @endif
+                        @if($freeShippingCoupon)
+                        <div class="text-success mb-2" style="font-size: 11px;">Free shipping with this coupon</div>
+                        @endif
                         <div class="d-flex justify-content-between mb-2" style="font-size: 13px;">
                             <span class="text-muted">Shipping</span>
                             <span class="fw-medium" style="color: var(--lm-primary);" id="shipping_display">Select method</span>
@@ -216,7 +266,9 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const subtotal = {{ $subtotal }};
+    const subtotal = {{ (float) $subtotal }};
+    const discount = {{ (float) $discountAmount }};
+    const freeShippingCoupon = {{ $freeShippingCoupon ? 'true' : 'false' }};
     const shippingDisplay = document.getElementById('shipping_display');
     const totalDisplay = document.getElementById('total_display');
     const shippingRadios = document.querySelectorAll('.shipping-radio');
@@ -224,9 +276,15 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateTotals() {
         const selected = document.querySelector('.shipping-radio:checked');
         if (selected) {
-            const cost = parseFloat(selected.dataset.cost) || 0;
-            shippingDisplay.textContent = cost > 0 ? '৳' + cost.toFixed(0) : 'Free';
-            totalDisplay.textContent = '৳' + (subtotal + cost).toLocaleString('en-BD', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            let cost = parseFloat(selected.dataset.cost) || 0;
+            if (freeShippingCoupon) {
+                cost = 0;
+                shippingDisplay.textContent = 'Free (coupon)';
+            } else {
+                shippingDisplay.textContent = cost > 0 ? '৳' + cost.toFixed(0) : 'Free';
+            }
+            const afterDiscount = Math.max(0, subtotal - discount);
+            totalDisplay.textContent = '৳' + (afterDiscount + cost).toLocaleString('en-BD', {minimumFractionDigits: 2, maximumFractionDigits: 2});
         }
     }
 

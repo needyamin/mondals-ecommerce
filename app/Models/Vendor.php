@@ -5,17 +5,51 @@ namespace App\Models;
 use App\Traits\{HasSlug, HasStatus, Filterable, Auditable};
 use Illuminate\Database\Eloquent\{Model, SoftDeletes};
 use Illuminate\Database\Eloquent\Relations\{BelongsTo, HasMany};
+use Illuminate\Support\Facades\Storage;
 
 class Vendor extends Model
 {
     use SoftDeletes, HasSlug, Filterable, Auditable, \App\Traits\HasFallbackImage;
 
     /**
-     * Get the display image URL with fallback.
+     * Logo for listings (full URL, storage path, or placeholder).
      */
     public function getDisplayImageAttribute(): string
     {
-        return $this->getFallbackImage($this->logo, $this->store_name, '300x300');
+        $path = $this->logo;
+        if (filled($path)) {
+            if (filter_var($path, FILTER_VALIDATE_URL)) {
+                return $path;
+            }
+            try {
+                if (Storage::disk('public')->exists($path)) {
+                    return Storage::disk('public')->url($path);
+                }
+            } catch (\Throwable) {
+            }
+        }
+
+        return $this->getFallbackImage($path, $this->store_name, '300x300');
+    }
+
+    /** Cover/banner URL for admin list, or null. */
+    public function getDisplayBannerAttribute(): ?string
+    {
+        $path = $this->banner;
+        if (!filled($path)) {
+            return null;
+        }
+        if (filter_var($path, FILTER_VALIDATE_URL)) {
+            return $path;
+        }
+        try {
+            if (Storage::disk('public')->exists($path)) {
+                return Storage::disk('public')->url($path);
+            }
+        } catch (\Throwable) {
+        }
+
+        return null;
     }
 
 

@@ -78,9 +78,9 @@
         <div class="container py-3">
             <div class="row align-items-center">
                 <div class="col-md-6 text-center text-md-start">
-                    <span style="font-size: 12px; opacity: .7;">
-                        &copy; {{ date('Y') }} {{ \App\Models\Setting::get('site_name', 'Mondals E-Commerce') }}. All rights reserved.
-                    </span>
+                    <div style="font-size: 12px; opacity: .85;" class="d-flex flex-column gap-1">
+                        <span>&copy; {{ date('Y') }} {{ \App\Models\Setting::get('site_name', 'Mondals E-Commerce') }}. Software made and copyright by <a href="https://inside.ansnew.com/" target="_blank" rel="noopener noreferrer" class="text-white text-decoration-underline">ANSNEW TECH.</a></span>
+                    </div>
                 </div>
                 <div class="col-md-6 text-center text-md-end mt-2 mt-md-0">
                     <div class="d-inline-flex gap-2 align-items-center">

@@ -16,7 +16,7 @@ class ProductImage extends Model
      */
     public function getDisplayUrlAttribute(): string
     {
-        return $this->getFallbackImage($this->image, 'Product Image', '600x600');
+        return $this->getFallbackImage($this->image, 'Product Image', '600x600', 'image', 'products');
     }
 
 

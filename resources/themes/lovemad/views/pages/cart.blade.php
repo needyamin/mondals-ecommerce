@@ -59,7 +59,7 @@
                         <div class="d-flex align-items-center" style="flex: 5; min-width: 200px;">
                             <div class="border rounded overflow-hidden flex-shrink-0 me-3" style="width: 72px; height: 72px;">
                                 @if($product->primary_image)
-                                    <img src="{{ asset('storage/' . $product->primary_image) }}" alt="{{ $product->name }}" class="w-100 h-100" style="object-fit: cover;">
+                                    <img src="{{ $product->display_image }}" alt="{{ $product->name }}" class="w-100 h-100" style="object-fit: cover;">
                                 @else
                                     <div class="d-flex align-items-center justify-content-center w-100 h-100 bg-light"><i class="bi bi-image text-muted"></i></div>
                                 @endif

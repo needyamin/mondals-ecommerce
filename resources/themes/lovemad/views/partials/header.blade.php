@@ -2,7 +2,7 @@
 <div class="py-1" style="background: var(--lm-secondary); color: #ccc; font-size: 12px;">
     <div class="container d-flex justify-content-between align-items-center">
         <div class="d-flex align-items-center gap-3">
-            <span><i class="bi bi-telephone me-1"></i> Helpline: +880 9612-000000</span>
+            <span><i class="bi bi-telephone me-1"></i> Helpline: <a href="tel:+8801878578504" class="text-light text-decoration-none">01878578504</a></span>
             <span class="d-none d-md-inline">|</span>
             <span class="d-none d-md-inline"><i class="bi bi-truck me-1"></i> Free delivery on orders over ৳999</span>
         </div>
@@ -59,7 +59,7 @@
                 <a href="{{ route('cart') }}" class="btn btn-light border-0 position-relative px-3 py-2" title="Cart">
                     <i class="bi bi-cart3 fs-5 text-dark"></i>
                     @if($cartCount > 0)
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill" style="background: var(--lm-primary); font-size: 10px;">
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill" style="background: var(--lm-primary); font-size: 10px; transform: translate(-50%, -30%);">
                             {{ $cartCount }}
                         </span>
                     @endif

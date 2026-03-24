@@ -7,6 +7,7 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @include('partials.marketing-head')
 </head>
 <body class="bg-slate-50 dark:bg-darkbg text-slate-900 dark:text-white font-sans antialiased min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
     
@@ -136,5 +137,6 @@
             </div>
         </div>
     </div>
+    @include('partials.marketing-body')
 </body>
 </html>

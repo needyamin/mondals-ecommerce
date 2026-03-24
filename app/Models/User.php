@@ -24,7 +24,12 @@ class User extends Authenticatable
      */
     public function getDisplayAvatarAttribute(): string
     {
-        return $this->getFallbackImage($this->avatar, $this->name, '128x128', 'avatar');
+        $path = $this->avatar;
+        if (filled($path) && filter_var($path, FILTER_VALIDATE_URL)) {
+            return $path;
+        }
+
+        return $this->getFallbackImage($path, $this->name, '128x128', 'avatar');
     }
 
 

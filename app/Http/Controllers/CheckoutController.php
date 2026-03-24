@@ -30,6 +30,15 @@ class CheckoutController extends Controller
         }
 
         $subtotal = $cart->items->sum(fn($item) => $item->price * $item->quantity);
+        $discountAmount = 0.0;
+        $freeShippingCoupon = false;
+        if ($cart->coupon && $cart->coupon->isValid()) {
+            if ($cart->coupon->type === 'free_shipping') {
+                $freeShippingCoupon = true;
+            } else {
+                $discountAmount = $cart->coupon->calculateDiscount((float) $subtotal);
+            }
+        }
         $addresses = auth()->user()->addresses ?? collect();
         
         // 1. Load active shipping methods and merge with plugin-hooked methods
@@ -59,7 +68,7 @@ class CheckoutController extends Controller
         $paymentMethods = $this->getAvailablePaymentMethods();
 
         return view('pages.checkout', compact(
-            'cart', 'subtotal', 'addresses', 
+            'cart', 'subtotal', 'discountAmount', 'freeShippingCoupon', 'addresses',
             'availShipping', 'paymentMethods'
         ));
     }
@@ -91,24 +100,37 @@ class CheckoutController extends Controller
 
         try {
             $subtotal = $cart->items->sum(fn($i) => $i->price * $i->quantity);
-            
-            // Resolve shipping cost
+
             $shippingCost = $this->resolveShippingCost($request->shipping_method, $request->shipping_city);
+
+            $discountAmount = 0.0;
+            $appliedCoupon = $cart->coupon;
+            if ($appliedCoupon && $appliedCoupon->isValid()) {
+                if ($appliedCoupon->type === 'free_shipping') {
+                    $shippingCost = 0;
+                } else {
+                    $discountAmount = $appliedCoupon->calculateDiscount((float) $subtotal);
+                }
+            } else {
+                $appliedCoupon = null;
+            }
+
+            $total = round(max(0, $subtotal - $discountAmount) + $shippingCost, 2);
 
             // Build order
             $order = Order::create([
                 'order_number'           => 'ORD-' . strtoupper(uniqid()),
                 'user_id'                => auth()->id(),
-                'coupon_id'              => $cart->coupon_id,
+                'coupon_id'              => $appliedCoupon?->id,
                 'status'                 => 'pending',
                 'payment_status'         => 'pending', // Enum doesn't allow 'cod'
                 'payment_method'         => $request->payment_method,
                 'shipping_method_name'   => $request->shipping_method,
                 'subtotal'               => $subtotal,
-                'discount_amount'        => 0,
+                'discount_amount'        => $discountAmount,
                 'tax_amount'             => 0,
                 'shipping_amount'        => $shippingCost,
-                'total'                  => $subtotal + $shippingCost,
+                'total'                  => $total,
                 'currency'               => 'BDT',
                 'shipping_first_name'    => $request->shipping_first_name,
                 'shipping_last_name'     => $request->shipping_last_name,
@@ -172,7 +194,7 @@ class CheckoutController extends Controller
                 $initResult = $gateway->initiatePayment($order);
                 
                 if ($initResult['success'] && !empty($initResult['redirect_url'])) {
-                    // Payment initiated — NOW clear the cart
+                    $appliedCoupon?->increment('times_used');
                     $this->cartService->clearCart();
                     return redirect($initResult['redirect_url']);
                 }
@@ -188,6 +210,7 @@ class CheckoutController extends Controller
             }
 
             // COD — clear cart and go to confirmation
+            $appliedCoupon?->increment('times_used');
             $this->cartService->clearCart();
 
             return redirect()->route('order.confirmation', $order->order_number)
@@ -217,9 +240,16 @@ class CheckoutController extends Controller
      */
     protected function resolveShippingCost(string $methodId, ?string $city = null): float
     {
-        // 1. Try DB-based shipping method (numeric ID)
+        if (str_starts_with($methodId, 'db_')) {
+            $id = (int) substr($methodId, 3);
+            if ($id > 0) {
+                $sm = ShippingMethod::find($id);
+                return $sm ? (float) $sm->cost : 0;
+            }
+        }
+
         if (is_numeric($methodId)) {
-            $sm = ShippingMethod::find($methodId);
+            $sm = ShippingMethod::find((int) $methodId);
             return $sm ? (float) $sm->cost : 0;
         }
 

@@ -1,13 +1,13 @@
 @extends('layouts.admin')
 
-@section('title', 'Register New Merchant')
+@section('title', $vendor ? 'Edit vendor' : 'Add vendor')
 
 @section('content')
 
     <div class="mb-8 flex items-center justify-between">
         <div>
-            <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white font-heading tracking-tight">Add Merchant</h2>
-            <p class="text-slate-500 dark:text-slate-400 mt-1">Onboard a new vendor partner manually to the platform.</p>
+            <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white font-heading tracking-tight">{{ $vendor ? 'Edit vendor' : 'Add vendor' }}</h2>
+            <p class="text-slate-500 dark:text-slate-400 mt-1">{{ $vendor ? 'Update store and owner details.' : 'Register a new seller and login account.' }}</p>
         </div>
         <a href="{{ route('admin.vendors.index') }}" class="text-slate-500 hover:text-brand-600 font-bold transition flex items-center bg-white dark:bg-darkpanel px-4 py-2 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800">
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
