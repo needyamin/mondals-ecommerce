@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace Plugins\MarketingTracking\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
@@ -44,7 +44,7 @@ class MarketingTrackingController extends Controller
             }
         }
 
-        return view('admin.marketing.edit', ['values' => $values]);
+        return view('marketing-tracking::admin.edit', ['values' => $values]);
     }
 
     public function update(Request $request)

@@ -86,6 +86,8 @@
     </div>
 </div>
 @push('scripts')
-    @include('partials.marketing-purchase', ['order' => $order])
+    @if(\App\Models\Plugin::isActiveSlug('marketing-tracking'))
+    @include('marketing-tracking::partials.marketing-purchase', ['order' => $order])
+    @endif
 @endpush
 @endsection

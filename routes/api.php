@@ -21,9 +21,6 @@ Route::prefix('v1')->middleware('force-json')->group(function () {
     Route::get('/products/featured', [\App\Http\Controllers\Api\V1\ProductController::class, 'featured']);
     Route::get('/products/{slug}', [\App\Http\Controllers\Api\V1\ProductController::class, 'show']);
 
-    // Public Reviews
-    Route::get('/products/{productId}/reviews', [\App\Http\Controllers\Api\V1\ReviewController::class, 'index']);
-
     // Protected Routes
     Route::middleware('auth:sanctum')->group(function () {
         
@@ -42,9 +39,6 @@ Route::prefix('v1')->middleware('force-json')->group(function () {
         // Wishlist
         Route::get('/wishlists', [\App\Http\Controllers\Api\V1\WishlistController::class, 'index']);
         Route::post('/wishlists/toggle', [\App\Http\Controllers\Api\V1\WishlistController::class, 'toggle']);
-
-        // Reviews (Submit)
-        Route::post('/reviews', [\App\Http\Controllers\Api\V1\ReviewController::class, 'store']);
 
         // Cart
         Route::get('/cart', [\App\Http\Controllers\Api\V1\CartController::class, 'index']);

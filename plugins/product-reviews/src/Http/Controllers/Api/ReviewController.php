@@ -1,21 +1,18 @@
 <?php
 
-namespace App\Http\Controllers\Api\V1;
+namespace Plugins\ProductReviews\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Review;
 use App\Models\OrderItem;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Plugins\ProductReviews\Models\Review;
 
 class ReviewController extends Controller
 {
     use ApiResponse;
 
-    /**
-     * Submit a product review.
-     */
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -26,26 +23,21 @@ class ReviewController extends Controller
             'comment'    => 'required|string|max:1000',
         ]);
 
-        // Check if user actually purchased this product (Optional rule)
         $hasPurchased = OrderItem::whereHas('order', function ($q) {
             $q->where('user_id', auth()->id())->whereIn('status', ['delivered', 'completed']);
         })->where('product_id', $validated['product_id'])->exists();
 
         $review = auth()->user()->reviews()->create(array_merge($validated, [
-            // Auto approve if purchased, else pending moderation
-            'status' => $hasPurchased ? 'approved' : 'pending',
+            'status'      => $hasPurchased ? 'approved' : 'pending',
             'approved_at' => $hasPurchased ? now() : null,
         ]));
 
         return $this->created(
-            $review, 
+            $review,
             $hasPurchased ? 'Review published successfully' : 'Review submitted for moderation'
         );
     }
 
-    /**
-     * Get paginated reviews for a specific product (Public endpoint logic)
-     */
     public function index(Request $request, int $productId): JsonResponse
     {
         $reviews = Review::where('product_id', $productId)

@@ -71,6 +71,13 @@ class OrderController extends Controller
         return view('admin.orders.show', compact('order'));
     }
 
+    public function invoice(int $id)
+    {
+        $order = Order::with(['user', 'items.product'])->findOrFail($id);
+
+        return view('admin.orders.invoice', compact('order'));
+    }
+
     /**
      * Update order status.
      */

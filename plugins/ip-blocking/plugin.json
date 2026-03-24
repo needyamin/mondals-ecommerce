@@ -1,0 +1,11 @@
+{
+    "name": "IP & user blocking",
+    "slug": "ip-blocking",
+    "version": "1.0.0",
+    "author": "Mondals",
+    "description": "Block storefront/API access by IP (single or CIDR) and ban users by account.",
+    "type": "security",
+    "provider": "Plugins\\IpBlocking\\IpBlockingServiceProvider",
+    "default_settings": {},
+    "hooks": []
+}

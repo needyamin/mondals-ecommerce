@@ -26,6 +26,9 @@
             "Plugins\\BkashPayment\\": "plugins/bkash-payment/src/",
             "Plugins\\FlatRateShipping\\": "plugins/flat-rate-shipping/src/",
             "Plugins\\Pathao\\": "plugins/pathao/",
+            "Plugins\\IpBlocking\\": "plugins/ip-blocking/src/",
+            "Plugins\\ProductReviews\\": "plugins/product-reviews/src/",
+            "Plugins\\MarketingTracking\\": "plugins/marketing-tracking/src/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
         },

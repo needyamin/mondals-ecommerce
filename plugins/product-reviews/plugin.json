@@ -1,0 +1,11 @@
+{
+    "name": "Product reviews",
+    "slug": "product-reviews",
+    "version": "1.0.0",
+    "author": "Mondals",
+    "description": "Customer product reviews, moderation in admin and vendor panels, and API endpoints.",
+    "type": "feature",
+    "provider": "Plugins\\ProductReviews\\ProductReviewsServiceProvider",
+    "default_settings": {},
+    "hooks": []
+}

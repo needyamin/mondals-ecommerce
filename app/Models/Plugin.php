@@ -25,6 +25,15 @@ class Plugin extends Model
     // ── Relationships ──
     public function hooks() { return $this->hasMany(PluginHook::class); }
 
+    public static function isActiveSlug(string $slug): bool
+    {
+        try {
+            return static::query()->where('slug', $slug)->where('status', 'active')->exists();
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
     // ── Scopes ──
     public function scopeActive($query)  { return $query->where('status', 'active'); }
     public function scopeEnabled($query) { return $query->where('is_enabled', true); }

@@ -6,7 +6,6 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [\App\Http\Controllers\StorefrontController::class, 'home'])->name('home');
 Route::get('/products', [\App\Http\Controllers\StorefrontController::class, 'products'])->name('products');
 Route::get('/product/{slug}', [\App\Http\Controllers\StorefrontController::class, 'productDetail'])->name('product.detail');
-
 // Cart (works for both guests and authenticated users)
 Route::get('/cart', [\App\Http\Controllers\CartController::class, 'index'])->name('cart');
 Route::post('/cart/add', [\App\Http\Controllers\CartController::class, 'add'])->name('cart.add');
@@ -65,6 +64,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Orders (Custom actions, not standard resource)
     Route::get('/orders/export', [\App\Http\Controllers\Admin\OrderController::class, 'export'])->name('orders.export');
     Route::get('/orders', [\App\Http\Controllers\Admin\OrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/{id}/invoice', [\App\Http\Controllers\Admin\OrderController::class, 'invoice'])->name('orders.invoice');
     Route::get('/orders/{id}', [\App\Http\Controllers\Admin\OrderController::class, 'show'])->name('orders.show');
     Route::patch('/orders/{id}/status', [\App\Http\Controllers\Admin\OrderController::class, 'updateStatus'])->name('orders.status');
     Route::patch('/orders/{id}/payment', [\App\Http\Controllers\Admin\OrderController::class, 'updatePaymentStatus'])->name('orders.payment');
@@ -118,9 +118,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     Route::get('/storage/product-uploads', [\App\Http\Controllers\Admin\StorageSettingsController::class, 'edit'])->name('storage.edit');
     Route::post('/storage/product-uploads', [\App\Http\Controllers\Admin\StorageSettingsController::class, 'update'])->name('storage.update');
-
-    Route::get('/marketing', [\App\Http\Controllers\Admin\MarketingTrackingController::class, 'edit'])->name('marketing.edit');
-    Route::put('/marketing', [\App\Http\Controllers\Admin\MarketingTrackingController::class, 'update'])->name('marketing.update');
 
     // Themes
     Route::get('/themes', [\App\Http\Controllers\Admin\ThemeController::class, 'index'])->name('themes.index');

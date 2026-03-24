@@ -5,7 +5,13 @@
 
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12" x-data="{ quantity: 1, activeTab: 'description' }">
-    
+    @if(session('success'))
+        <div class="mb-6 p-4 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-800 dark:text-emerald-200 text-sm font-medium border border-emerald-200 dark:border-emerald-800">{{ session('success') }}</div>
+    @endif
+    @if(session('error'))
+        <div class="mb-6 p-4 rounded-xl bg-rose-50 dark:bg-rose-900/20 text-rose-800 dark:text-rose-200 text-sm font-medium border border-rose-200 dark:border-rose-800">{{ session('error') }}</div>
+    @endif
+
     <!-- Breadcrumbs -->
     <nav class="flex text-sm text-slate-500 mb-8 font-medium">
         <a href="{{ route('home') }}" class="hover:text-primary transition-colors">Home</a>
@@ -55,8 +61,8 @@
                 </button>
             </div>
 
-            <div class="flex items-center space-x-4 mb-6">
-                <!-- Stars -->
+            <div class="flex items-center space-x-4 mb-6 flex-wrap">
+                @if($reviewsEnabled ?? false)
                 <div class="flex items-center text-amber-500">
                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 15.27L16.18 19l-1.64-7.03L20 7.24l-7.19-.61L10 0 7.19 6.63 0 7.24l5.46 4.73L3.82 19z"/></svg>
                     <span class="ml-2 font-medium text-slate-700 dark:text-slate-300">{{ $product->getAverageRatingAttribute() }}</span>
@@ -64,6 +70,7 @@
                 <span class="text-slate-300 dark:text-slate-600">|</span>
                 <a href="#reviews" class="text-sm font-medium text-slate-500 hover:text-primary transition underline underline-offset-4 decoration-slate-200 decoration-2">{{ $product->reviews_count ?? $product->reviews->count() }} Reviews</a>
                 <span class="text-slate-300 dark:text-slate-600">|</span>
+                @endif
                 <span class="text-sm font-medium text-slate-500"><span class="text-green-500 dark:text-emerald-400">●</span> {{ $product->quantity }} in stock</span>
             </div>
 
@@ -124,9 +131,11 @@
             <button @click="activeTab = 'specifications'" :class="{ 'border-primary text-primary dark:text-indigo-400': activeTab === 'specifications', 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300': activeTab !== 'specifications' }" class="pb-4 font-heading font-bold text-xl border-b-2 transition-colors focus:outline-none">
                 Specifications
             </button>
+            @if($reviewsEnabled ?? false)
             <button @click="activeTab = 'reviews'" :class="{ 'border-primary text-primary dark:text-indigo-400': activeTab === 'reviews', 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300': activeTab !== 'reviews' }" class="pb-4 font-heading font-bold text-xl border-b-2 transition-colors focus:outline-none" id="reviews">
                 Reviews
             </button>
+            @endif
         </div>
         
         <div class="pt-8">
@@ -163,7 +172,7 @@
                 </table>
             </div>
             
-            <!-- Reviews Panel -->
+            @if($reviewsEnabled ?? false)
             <div x-cloak x-show="activeTab === 'reviews'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0">
                 @if($product->reviews->isEmpty())
                     <p class="text-slate-500 italic">No reviews yet. Be the first to review this product!</p>
@@ -190,20 +199,38 @@
                         @endforeach
                     </div>
                 @endif
-                
+
                 @auth
-                <div class="mt-10">
-                    <h4 class="text-xl font-bold font-heading text-slate-900 dark:text-white mb-4">Write a Review</h4>
-                    <!-- review form placeholder -->
-                    <textarea class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl p-4 text-slate-900 dark:text-white focus:ring-primary focus:border-primary mb-4" rows="4" placeholder="Share your thoughts..."></textarea>
-                    <button class="btn-primary">Submit Review</button>
-                </div>
+                    @if($userHasReviewed ?? false)
+                        <p class="mt-10 text-slate-500 dark:text-slate-400 text-sm">You have already submitted a review for this product.</p>
+                    @else
+                    <form action="{{ route('product.reviews.store', $product->slug) }}" method="POST" class="mt-10 space-y-4">
+                        @csrf
+                        <h4 class="text-xl font-bold font-heading text-slate-900 dark:text-white mb-2">Write a Review</h4>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Rating</label>
+                            <select name="rating" class="w-full max-w-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white px-4 py-2 text-sm" required>
+                                @foreach([5 => '5 — Excellent', 4 => '4 — Very good', 3 => '3 — Good', 2 => '2 — Fair', 1 => '1 — Poor'] as $val => $label)
+                                    <option value="{{ $val }}" @selected((int) old('rating', 5) === $val)>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                            @error('rating')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Your review</label>
+                            <textarea name="comment" rows="4" class="w-full bg-slate-50 dark:bg-slate-800 border rounded-xl p-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary border-slate-200 dark:border-slate-700 @error('comment') border-red-500 @enderror" placeholder="Share your thoughts (at least 10 characters)..." required minlength="10" maxlength="2000">{{ old('comment') }}</textarea>
+                            @error('comment')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror
+                        </div>
+                        <button type="submit" class="btn-primary">Submit Review</button>
+                    </form>
+                    @endif
                 @else
                 <div class="mt-8 bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 rounded-xl p-4">
                     <p>Please <a href="{{ route('login') }}" class="font-bold underline">log in</a> to write a review.</p>
                 </div>
                 @endauth
             </div>
+            @endif
         </div>
     </div>
 

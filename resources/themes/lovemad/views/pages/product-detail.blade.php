@@ -5,6 +5,12 @@
 
 @section('content')
 <div class="container py-3">
+    @if(session('success'))
+        <div class="alert alert-success py-2 px-3 mb-3" style="font-size: 13px; border-radius: 4px;">{{ session('success') }}</div>
+    @endif
+    @if(session('error'))
+        <div class="alert alert-danger py-2 px-3 mb-3" style="font-size: 13px; border-radius: 4px;">{{ session('error') }}</div>
+    @endif
 
     {{-- Breadcrumbs --}}
     <nav aria-label="breadcrumb" class="mb-3">
@@ -51,7 +57,8 @@
                 <h1 class="fw-bold mb-3" style="font-size: 20px; line-height: 1.4;">{{ $product->name }}</h1>
 
                 {{-- Rating --}}
-                <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
+                <div class="d-flex align-items-center mb-3 pb-3 border-bottom flex-wrap">
+                    @if($reviewsEnabled ?? false)
                     <div class="d-flex align-items-center me-3">
                         @php $avgRating = $product->getAverageRatingAttribute(); @endphp
                         @for($i = 1; $i <= 5; $i++)
@@ -61,6 +68,7 @@
                     </div>
                     <span class="text-muted" style="font-size: 13px;">{{ $product->reviews_count ?? $product->reviews->count() }} Ratings</span>
                     <span class="mx-2 text-muted">|</span>
+                    @endif
                     <span class="text-muted" style="font-size: 13px;"><span style="color: var(--lm-success)">●</span> {{ $product->quantity }} in stock</span>
                 </div>
 
@@ -81,19 +89,21 @@
                 </p>
 
                 {{-- Quantity & Add to Cart --}}
-                <div class="d-flex align-items-center gap-3 mb-4">
-                    <div class="d-flex align-items-center">
-                        <label class="me-2 text-muted" style="font-size: 13px;">Quantity</label>
-                        <div class="input-group" style="width: 130px;">
-                            <button class="btn btn-outline-secondary border-end-0 px-3" type="button" id="qty-minus">
-                                <i class="bi bi-dash"></i>
-                            </button>
-                            <input type="number" id="qty-input" value="1" min="1" max="{{ $product->quantity }}"
-                                   class="form-control text-center border-start-0 border-end-0 shadow-none fw-bold" style="font-size: 14px;" readonly>
-                            <button class="btn btn-outline-secondary border-start-0 px-3" type="button" id="qty-plus">
-                                <i class="bi bi-plus"></i>
-                            </button>
-                        </div>
+                @php
+                    $stockQty = max(0, (int) $product->quantity);
+                    $maxSelectable = $stockQty > 0 ? $stockQty : 1;
+                @endphp
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-4">
+                    <span class="text-muted flex-shrink-0" style="font-size: 13px;">Quantity</span>
+                    <div class="product-qty-wrap d-inline-flex align-items-stretch rounded border bg-white overflow-hidden" role="group" aria-label="Quantity">
+                        <button class="product-qty-btn" type="button" id="qty-minus" aria-label="Decrease quantity" @if($stockQty < 1) disabled @endif>
+                            <i class="bi bi-dash" style="font-size: 1.1rem;"></i>
+                        </button>
+                        <input type="number" id="qty-input" value="{{ $stockQty > 0 ? 1 : 0 }}" min="{{ $stockQty > 0 ? 1 : 0 }}" max="{{ $maxSelectable }}"
+                               class="product-qty-input text-center fw-bold border-0 flex-shrink-0" style="font-size: 15px;" inputmode="numeric" readonly>
+                        <button class="product-qty-btn" type="button" id="qty-plus" aria-label="Increase quantity" @if($stockQty < 1) disabled @endif>
+                            <i class="bi bi-plus" style="font-size: 1.1rem;"></i>
+                        </button>
                     </div>
                 </div>
 
@@ -101,9 +111,9 @@
                     <form action="{{ route('cart.add') }}" method="POST" class="flex-grow-1" id="addToCartForm">
                         @csrf
                         <input type="hidden" name="product_id" value="{{ $product->id }}">
-                        <input type="hidden" name="quantity" id="form-qty" value="1">
-                        <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold" style="border-radius: 2px; font-size: 14px;">
-                            <i class="bi bi-cart-plus me-2"></i> Add to Cart
+                        <input type="hidden" name="quantity" id="form-qty" value="{{ $stockQty > 0 ? 1 : 0 }}">
+                        <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold" style="border-radius: 2px; font-size: 14px;" @if($stockQty < 1) disabled @endif>
+                            <i class="bi bi-cart-plus me-2"></i> {{ $stockQty < 1 ? 'Out of stock' : 'Add to Cart' }}
                         </button>
                     </form>
                 </div>
@@ -160,10 +170,12 @@
                 <button class="nav-link fw-bold text-uppercase border-0" style="font-size: 13px;"
                         data-bs-toggle="tab" data-bs-target="#tab-specs" type="button">Specifications</button>
             </li>
+            @if($reviewsEnabled ?? false)
             <li class="nav-item" role="presentation">
                 <button class="nav-link fw-bold text-uppercase border-0" style="font-size: 13px;"
                         data-bs-toggle="tab" data-bs-target="#tab-reviews" type="button">Reviews ({{ $product->reviews->count() }})</button>
             </li>
+            @endif
         </ul>
         <div class="tab-content pt-4">
             {{-- Description --}}
@@ -181,11 +193,13 @@
                         @if($product->brand)
                             <tr class="border-bottom"><td class="fw-bold text-muted">Brand</td><td>{{ $product->brand->name }}</td></tr>
                         @endif
-                        <tr><td class="fw-bold text-muted">Sold By</td><td><a href="{{ route('stores.index') }}" class="text-decoration-none fw-bold">{{ $product->vendor->store_name }}</a></td></tr>
+                        @if($product->vendor)
+                            <tr><td class="fw-bold text-muted">Sold By</td><td><a href="{{ route('stores.show', $product->vendor->slug) }}" class="text-decoration-none fw-bold">{{ $product->vendor->store_name }}</a></td></tr>
+                        @endif
                     </tbody>
                 </table>
             </div>
-            {{-- Reviews --}}
+            @if($reviewsEnabled ?? false)
             <div class="tab-pane fade" id="tab-reviews">
                 @if($product->reviews->isEmpty())
                     <p class="text-muted text-center py-4" style="font-size: 13px;">No reviews yet. Be the first to review this product!</p>
@@ -214,17 +228,36 @@
                 @endif
 
                 @auth
-                    <div class="mt-4 pt-3 border-top">
+                    @if($userHasReviewed ?? false)
+                        <p class="text-muted mt-4 pt-3 border-top mb-0" style="font-size: 13px;">You have already submitted a review for this product.</p>
+                    @else
+                    <form action="{{ route('product.reviews.store', $product->slug) }}" method="POST" class="mt-4 pt-3 border-top">
+                        @csrf
                         <h6 class="fw-bold mb-3" style="font-size: 14px;">Write a Review</h6>
-                        <textarea class="form-control bg-light border-0 shadow-none mb-3" rows="3" placeholder="Share your experience..." style="font-size: 13px;"></textarea>
-                        <button class="btn btn-primary btn-sm fw-bold px-4" style="border-radius: 2px;">Submit Review</button>
-                    </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted mb-1" style="font-size: 12px;">Rating</label>
+                            <select name="rating" class="form-select form-select-sm" required style="max-width: 220px; font-size: 13px;">
+                                @foreach([5 => '5 — Excellent', 4 => '4 — Very good', 3 => '3 — Good', 2 => '2 — Fair', 1 => '1 — Poor'] as $val => $label)
+                                    <option value="{{ $val }}" @selected((int) old('rating', 5) === $val)>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                            @error('rating')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted mb-1" style="font-size: 12px;">Your review</label>
+                            <textarea name="comment" rows="4" class="form-control bg-light border shadow-none @error('comment') is-invalid @enderror" placeholder="Share your experience (at least 10 characters)..." style="font-size: 13px;" required minlength="10" maxlength="2000">{{ old('comment') }}</textarea>
+                            @error('comment')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm fw-bold px-4" style="border-radius: 2px;">Submit Review</button>
+                    </form>
+                    @endif
                 @else
                     <div class="mt-3 p-3 bg-light rounded text-center" style="font-size: 13px;">
                         <a href="{{ route('login') }}" class="fw-bold text-decoration-none">Log in</a> to write a review.
                     </div>
                 @endauth
             </div>
+            @endif
         </div>
     </div>
 
@@ -252,20 +285,29 @@
     document.addEventListener('DOMContentLoaded', function() {
         const qtyInput = document.getElementById('qty-input');
         const formQty = document.getElementById('form-qty');
-        const maxQty = {{ $product->quantity }};
+        const btnMinus = document.getElementById('qty-minus');
+        const btnPlus = document.getElementById('qty-plus');
+        const maxQty = {{ $stockQty }};
+        if (!qtyInput || maxQty < 1) return;
 
-        document.getElementById('qty-minus').addEventListener('click', () => {
-            if (parseInt(qtyInput.value) > 1) {
-                qtyInput.value = parseInt(qtyInput.value) - 1;
-                formQty.value = qtyInput.value;
-            }
+        function sync() {
+            let n = parseInt(qtyInput.value, 10) || 1;
+            n = Math.min(maxQty, Math.max(1, n));
+            qtyInput.value = n;
+            formQty.value = n;
+            btnMinus.disabled = n <= 1;
+            btnPlus.disabled = n >= maxQty;
+        }
+        sync();
+
+        btnMinus.addEventListener('click', () => {
+            let n = parseInt(qtyInput.value, 10) || 1;
+            if (n > 1) { qtyInput.value = n - 1; sync(); }
         });
 
-        document.getElementById('qty-plus').addEventListener('click', () => {
-            if (parseInt(qtyInput.value) < maxQty) {
-                qtyInput.value = parseInt(qtyInput.value) + 1;
-                formQty.value = qtyInput.value;
-            }
+        btnPlus.addEventListener('click', () => {
+            let n = parseInt(qtyInput.value, 10) || 1;
+            if (n < maxQty) { qtyInput.value = n + 1; sync(); }
         });
 
         // Tab active style
@@ -287,6 +329,20 @@
 <style>
     .thumb-item { transition: border-color .2s; }
     .thumb-item:hover { border-color: var(--lm-primary) !important; }
+    .product-qty-wrap { border-color: var(--lm-border) !important; min-height: 44px; }
+    .product-qty-btn {
+        width: 44px; flex-shrink: 0; border: 0; background: #f3f4f6; color: var(--lm-text);
+        display: inline-flex; align-items: center; justify-content: center;
+        transition: background .15s, color .15s;
+    }
+    .product-qty-btn:hover:not(:disabled) { background: #e8e8e8; color: var(--lm-primary); }
+    .product-qty-btn:disabled { opacity: .45; cursor: not-allowed; }
+    .product-qty-input {
+        width: 52px; min-width: 52px; background: #fff !important; color: var(--lm-text) !important;
+        -moz-appearance: textfield;
+    }
+    .product-qty-input::-webkit-outer-spin-button,
+    .product-qty-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 </style>
 @endpush
 

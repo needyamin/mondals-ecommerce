@@ -28,15 +28,15 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-12">
         
         <!-- Stat Card 1 -->
-        <div class="bg-white dark:bg-darkpanel rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 p-6 flex items-center relative overflow-hidden group hover:-translate-y-1 transition duration-300">
+        <div class="bg-white dark:bg-darkpanel rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 p-6 flex flex-col sm:flex-row sm:items-start gap-4 relative overflow-hidden group hover:-translate-y-1 transition duration-300">
             <div class="absolute -right-6 -top-6 w-24 h-24 bg-emerald-500/10 rounded-full blur-xl group-hover:scale-150 transition-transform duration-500"></div>
-            <div class="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center flex-shrink-0 mr-6 shadow-inner border border-emerald-200 dark:border-emerald-800/50">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <div class="w-14 h-14 sm:w-16 sm:h-16 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-inner border border-emerald-200 dark:border-emerald-800/50">
+                <svg class="w-7 h-7 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             </div>
-            <div>
+            <div class="min-w-0 flex-1 w-full">
                 <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1">Total Sales</p>
-                <h3 class="text-3xl font-extrabold text-slate-900 dark:text-white font-heading tracking-tight">৳{{ number_format($stats['total_sales'] ?? 105420.50, 2) }}</h3>
-                <span class="text-xs text-emerald-500 font-bold mt-2 flex items-center"><svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg> 12.5%</span>
+                <h3 class="text-lg sm:text-xl lg:text-2xl font-extrabold text-slate-900 dark:text-white font-heading tabular-nums tracking-tight leading-snug break-words hyphens-none">৳{{ number_format($stats['total_sales'] ?? 105420.50, 2) }}</h3>
+                <span class="text-xs text-emerald-500 font-bold mt-2 flex items-center"><svg class="w-3 h-3 mr-1 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg> 12.5%</span>
             </div>
         </div>
 

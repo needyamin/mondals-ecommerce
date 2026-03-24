@@ -37,7 +37,7 @@
                 @endif
             </div>
 
-            {{-- Rating --}}
+            @if(\App\Models\Plugin::isActiveSlug('product-reviews'))
             <div class="d-flex align-items-center mt-2">
                 <div class="d-flex align-items-center me-2">
                     @php $avgRating = $product->getAverageRatingAttribute(); @endphp
@@ -47,6 +47,7 @@
                 </div>
                 <span style="font-size: 11px; color: var(--lm-text-muted);">({{ $product->reviews_count ?? $product->reviews->count() }})</span>
             </div>
+            @endif
 
             {{-- Location / Vendor --}}
             @if($product->vendor)

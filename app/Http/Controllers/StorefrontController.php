@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Product;
 use App\Models\Category;
+use App\Models\Plugin;
+use App\Models\Product;
 use Illuminate\Http\Request;
 
 class StorefrontController extends Controller
@@ -66,18 +67,29 @@ class StorefrontController extends Controller
 
     public function productDetail($slug)
     {
-        $product = Product::with(['brand', 'categories', 'images', 'vendor', 'reviews.user'])
+        $product = Product::with(['brand', 'categories', 'images', 'vendor'])
             ->where('slug', $slug)
             ->where('status', 'approved')
             ->firstOrFail();
-            
+
+        $reviewsEnabled = Plugin::isActiveSlug('product-reviews');
+        $userHasReviewed = false;
+
+        if ($reviewsEnabled) {
+            $product->load([
+                'reviews' => fn ($q) => $q->where('status', 'approved')->with('user')->latest(),
+            ]);
+            $userHasReviewed = auth()->check()
+                && \Plugins\ProductReviews\Models\Review::where('user_id', auth()->id())->where('product_id', $product->id)->exists();
+        }
+
         // Increment views
         $product->incrementViews();
 
-        $relatedProducts = Product::whereHas('categories', function($q) use ($product) {
+        $relatedProducts = Product::whereHas('categories', function ($q) use ($product) {
             $q->whereIn('categories.id', $product->categories->pluck('id'));
         })->where('id', '!=', $product->id)->where('status', 'approved')->take(4)->get();
 
-        return view('pages.product-detail', compact('product', 'relatedProducts'));
+        return view('pages.product-detail', compact('product', 'relatedProducts', 'userHasReviewed', 'reviewsEnabled'));
     }
 }

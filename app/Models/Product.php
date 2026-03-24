@@ -33,7 +33,7 @@ class Product extends Model
     public function attributes(): BelongsToMany     { return $this->belongsToMany(Attribute::class); }
     public function images(): HasMany               { return $this->hasMany(ProductImage::class)->orderBy('sort_order'); }
     public function variants(): HasMany             { return $this->hasMany(ProductVariant::class); }
-    public function reviews(): HasMany              { return $this->hasMany(Review::class); }
+    public function reviews(): HasMany              { return $this->hasMany(\Plugins\ProductReviews\Models\Review::class); }
     public function wishlists(): HasMany            { return $this->hasMany(Wishlist::class); }
 
     // ── Scopes ──
@@ -56,6 +56,10 @@ class Product extends Model
 
     public function getAverageRatingAttribute(): float
     {
+        if (! \App\Models\Plugin::isActiveSlug('product-reviews')) {
+            return 0.0;
+        }
+
         return round($this->reviews()->where('status', 'approved')->avg('rating') ?? 0, 1);
     }
 

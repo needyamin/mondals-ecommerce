@@ -121,7 +121,9 @@
             box-shadow: 0 0 0 0.2rem rgba(248, 86, 6, 0.15);
         }
     </style>
-    @include('partials.marketing-head')
+    @if(\App\Models\Plugin::isActiveSlug('marketing-tracking'))
+    @include('marketing-tracking::partials.marketing-head')
+    @endif
     @stack('styles')
 </head>
 <body>
@@ -139,7 +141,9 @@
 
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    @include('partials.marketing-body')
+    @if(\App\Models\Plugin::isActiveSlug('marketing-tracking'))
+    @include('marketing-tracking::partials.marketing-body')
+    @endif
     @stack('scripts')
 </body>
 </html>

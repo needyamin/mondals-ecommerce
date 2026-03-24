@@ -52,7 +52,11 @@
                             </div>
                             <div class="text-center w-50">
                                 <div class="fw-bold" style="font-size: 18px; color: var(--lm-star);">
+                                    @if(\App\Models\Plugin::isActiveSlug('product-reviews'))
                                     {{ number_format($vendor->products->avg(fn($p) => $p->reviews->avg('rating')) ?? 0, 1) }}
+                                    @else
+                                    —
+                                    @endif
                                 </div>
                                 <div class="text-muted text-uppercase" style="font-size: 10px; letter-spacing: 1px;">Rating</div>
                             </div>

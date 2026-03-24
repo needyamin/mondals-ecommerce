@@ -15,7 +15,9 @@
             document.documentElement.classList.remove('dark')
         }
     </script>
-    @include('partials.marketing-head')
+    @if(\App\Models\Plugin::isActiveSlug('marketing-tracking'))
+    @include('marketing-tracking::partials.marketing-head')
+    @endif
 </head>
 <body class="bg-slate-50 dark:bg-darkbg text-slate-900 dark:text-slate-300 font-sans min-h-screen">
     
@@ -79,6 +81,8 @@
     </div>
 
     @include('partials.footer')
-    @include('partials.marketing-body')
+    @if(\App\Models\Plugin::isActiveSlug('marketing-tracking'))
+    @include('marketing-tracking::partials.marketing-body')
+    @endif
 </body>
 </html>

@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\{Vendor, Product};
+use App\Models\{Plugin, Product, Vendor};
 use App\Services\ProductService;
 use Illuminate\Http\Request;
 
@@ -31,10 +31,11 @@ class StoreController extends Controller
     public function index()
     {
         $vendors = Vendor::approved()
-            ->withCount('products')
-            ->with(['products.reviews'])
-            ->latest()
-            ->paginate(12);
+            ->withCount('products');
+        if (Plugin::isActiveSlug('product-reviews')) {
+            $vendors->with(['products.reviews']);
+        }
+        $vendors = $vendors->latest()->paginate(12);
 
         return view('pages.stores', compact('vendors'));
     }

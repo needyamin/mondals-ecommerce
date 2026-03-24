@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Plugin;
 use App\Models\Product;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -38,14 +39,18 @@ class ProductService
      */
     public function getBySlug(string $slug): Product
     {
+        $with = [
+            'vendor', 'brand', 'categories', 'images',
+            'attributes.values',
+            'variants.variantValues.attribute',
+            'variants.variantValues.attributeValue',
+        ];
+        if (Plugin::isActiveSlug('product-reviews')) {
+            $with['reviews'] = fn ($q) => $q->approved()->with('user')->latest()->limit(5);
+        }
+
         $product = Product::published()
-            ->with([
-                'vendor', 'brand', 'categories', 'images',
-                'attributes.values',
-                'variants.variantValues.attribute',
-                'variants.variantValues.attributeValue',
-                'reviews' => fn($q) => $q->approved()->with('user')->latest()->limit(5)
-            ])
+            ->with($with)
             ->where('slug', $slug)
             ->firstOrFail();
 

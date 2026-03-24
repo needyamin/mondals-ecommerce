@@ -34,7 +34,11 @@
                             <span class="text-xs text-slate-500 uppercase tracking-wider">Products</span>
                         </div>
                         <div class="text-center w-1/2">
+                            @if(\App\Models\Plugin::isActiveSlug('product-reviews'))
                             <span class="block text-2xl font-bold text-amber-500">{{ number_format($vendor->products->avg(fn($p) => $p->reviews->avg('rating')) ?? 0, 1) }}</span>
+                            @else
+                            <span class="block text-2xl font-bold text-slate-300 dark:text-slate-600">—</span>
+                            @endif
                             <span class="text-xs text-slate-500 uppercase tracking-wider">Rating</span>
                         </div>
                     </div>

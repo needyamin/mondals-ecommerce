@@ -1,0 +1,11 @@
+{
+    "name": "Marketing & tracking",
+    "slug": "marketing-tracking",
+    "version": "1.0.0",
+    "author": "Mondals",
+    "description": "GA4, Google Ads, Meta/TikTok/LinkedIn pixels, custom head/body HTML, and purchase events on order confirmation.",
+    "type": "marketing",
+    "provider": "Plugins\\MarketingTracking\\MarketingTrackingServiceProvider",
+    "default_settings": {},
+    "hooks": []
+}

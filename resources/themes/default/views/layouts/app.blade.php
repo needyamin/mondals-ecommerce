@@ -20,7 +20,9 @@
         }
     </script>
 
-    @include('partials.marketing-head')
+    @if(\App\Models\Plugin::isActiveSlug('marketing-tracking'))
+    @include('marketing-tracking::partials.marketing-head')
+    @endif
 
     @stack('styles')
 </head>
@@ -39,7 +41,9 @@
     <!-- Footer -->
     @include('partials.footer')
 
-    @include('partials.marketing-body')
+    @if(\App\Models\Plugin::isActiveSlug('marketing-tracking'))
+    @include('marketing-tracking::partials.marketing-body')
+    @endif
     @stack('scripts')
 </body>
 </html>

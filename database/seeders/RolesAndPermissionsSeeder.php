@@ -114,7 +114,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'products.view', 'products.create', 'products.update', 'products.delete',
             'orders.view',
             'coupons.view', 'coupons.create', 'coupons.update', 'coupons.delete',
-            'reviews.view',
+            'reviews.view', 'reviews.approve', 'reviews.reject',
             'reports.view',
             'payouts.view',
         ]);

@@ -27,7 +27,11 @@
                 <div class="flex flex-wrap justify-center md:justify-start items-center gap-6 mt-4">
                     <div class="flex items-center text-amber-400">
                         <svg class="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M10 15.27L16.18 19l-1.64-7.03L20 7.24l-7.19-.61L10 0 7.19 6.63 0 7.24l5.46 4.73L3.82 19z"/></svg>
+                        @if(\App\Models\Plugin::isActiveSlug('product-reviews'))
                         <span class="font-bold text-xl">{{ number_format($vendor->products->flatMap->reviews->avg('rating') ?? 0, 1) }} <span class="text-sm text-indigo-200 font-normal">Average Rating</span></span>
+                        @else
+                        <span class="font-bold text-xl">— <span class="text-sm text-indigo-200 font-normal">Average Rating</span></span>
+                        @endif
                     </div>
                     <div class="px-4 py-1 rounded-full bg-white/10 border border-white/20 backdrop-blur-md text-sm font-medium">
                         Joined {{ $vendor->created_at->format('M Y') }}
