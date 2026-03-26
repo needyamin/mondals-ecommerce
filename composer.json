@@ -33,7 +33,9 @@
             "Database\\Seeders\\": "database/seeders/"
         },
         "files": [
-            "app/Helpers/theme_helpers.php"
+            "app/Helpers/theme_helpers.php",
+            "app/Helpers/media_uploads.php",
+            "app/Helpers/business_calculation.php"
         ]
     },
     "autoload-dev": {

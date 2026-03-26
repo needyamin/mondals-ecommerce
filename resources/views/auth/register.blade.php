@@ -63,6 +63,10 @@
                 </button>
             </form>
 
+            <p class="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">
+                Want to sell on Mondals?
+                <a href="{{ route('register.vendor') }}" class="font-bold text-primary hover:text-purple-600 dark:hover:text-indigo-400 transition-colors">Register as a seller</a>
+            </p>
             <p class="mt-8 text-center text-sm text-slate-500 dark:text-slate-400">
                 Already have an account?
                 <a href="{{ route('login') }}" class="font-bold text-primary hover:text-purple-600 dark:hover:text-indigo-400 transition-colors">Sign in</a>

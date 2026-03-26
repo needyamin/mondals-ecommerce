@@ -16,7 +16,7 @@ class UserController extends Controller
     private const STATUSES = ['active', 'inactive', 'banned', 'pending'];
 
     /** @var list<string> */
-    private const ROLES = ['customer', 'admin', 'vendor'];
+    private const ROLES = ['customer', 'admin', 'vendor', 'staff'];
 
     /**
      * List all customers.
@@ -77,7 +77,7 @@ class UserController extends Controller
             'name'             => 'required|string|max:255',
             'email'            => 'required|email|unique:users,email',
             'password'         => 'required|string|min:8',
-            'role'             => 'required|in:customer,admin,vendor',
+            'role'             => 'required|in:customer,admin,vendor,staff',
             'status'           => 'required|in:active,inactive,banned',
             'marketing_opt_in' => 'nullable|boolean',
         ]);
@@ -85,12 +85,13 @@ class UserController extends Controller
         $user = User::create([
             'name'             => $validated['name'],
             'email'            => $validated['email'],
-            'password'         => bcrypt($validated['password']),
+            'password'         => $validated['password'],
             'status'           => $validated['status'],
             'marketing_opt_in' => $request->has('marketing_opt_in'),
         ]);
 
         $user->assignRole($validated['role']);
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
         return redirect()->route('admin.users.index')
             ->with('success', "Account for '{$user->name}' created successfully.");
@@ -126,7 +127,7 @@ class UserController extends Controller
             'name'             => 'required|string|max:255',
             'email'            => 'required|email|unique:users,email,' . $user->id,
             'password'         => 'nullable|string|min:8',
-            'role'             => 'required|in:customer,admin,vendor',
+            'role'             => 'required|in:customer,admin,vendor,staff',
             'status'           => 'required|in:active,inactive,banned',
             'marketing_opt_in' => 'nullable|boolean',
         ]);
@@ -138,11 +139,12 @@ class UserController extends Controller
             'marketing_opt_in' => $request->has('marketing_opt_in'),
         ]);
 
-        if ($validated['password']) {
-            $user->update(['password' => bcrypt($validated['password'])]);
+        if (! empty($validated['password'])) {
+            $user->update(['password' => $validated['password']]);
         }
 
         $user->syncRoles([$validated['role']]);
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
         return redirect()->route('admin.users.index')
             ->with('success', "Information for '{$user->name}' updated successfully.");

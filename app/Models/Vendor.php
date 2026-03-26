@@ -11,6 +11,24 @@ class Vendor extends Model
 {
     use SoftDeletes, HasSlug, Filterable, Auditable, \App\Traits\HasFallbackImage;
 
+    /** Normalize DB path to a key relative to storage/app/public (disk `public`). */
+    private function normalizedPublicPath(?string $path): string
+    {
+        if (! filled($path)) {
+            return '';
+        }
+        $path = str_replace('\\', '/', trim($path));
+        $path = ltrim($path, '/');
+        if (str_starts_with($path, 'storage/')) {
+            $path = substr($path, strlen('storage/'));
+        }
+        if (str_starts_with($path, 'public/')) {
+            $path = substr($path, strlen('public/'));
+        }
+
+        return $path;
+    }
+
     /**
      * Logo for listings (full URL, storage path, or placeholder).
      */
@@ -21,41 +39,71 @@ class Vendor extends Model
             if (filter_var($path, FILTER_VALIDATE_URL)) {
                 return $path;
             }
-            try {
-                if (Storage::disk('public')->exists($path)) {
-                    return Storage::disk('public')->url($path);
+            $rel = $this->normalizedPublicPath($path);
+            if ($rel !== '') {
+                try {
+                    return Storage::disk('public')->url($rel);
+                } catch (\Throwable) {
                 }
-            } catch (\Throwable) {
             }
         }
 
         return $this->getFallbackImage($path, $this->store_name, '300x300');
     }
 
-    /** Cover/banner URL for admin list, or null. */
+    /** Cover/banner URL for listings, or null. */
     public function getDisplayBannerAttribute(): ?string
     {
         $path = $this->banner;
-        if (!filled($path)) {
+        if (! filled($path)) {
             return null;
         }
         if (filter_var($path, FILTER_VALIDATE_URL)) {
             return $path;
         }
-        try {
-            if (Storage::disk('public')->exists($path)) {
-                return Storage::disk('public')->url($path);
-            }
-        } catch (\Throwable) {
+        $rel = $this->normalizedPublicPath($path);
+        if ($rel === '') {
+            return null;
         }
-
-        return null;
+        try {
+            return Storage::disk('public')->url($rel);
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
+    /** Address + city/region line for storefront (non-empty lines only). */
+    public function getAddressLinesAttribute(): array
+    {
+        $locLine = collect([$this->city, $this->state, $this->zip_code, $this->country])
+            ->filter(fn ($v) => filled($v))
+            ->implode(', ');
+
+        return array_values(array_filter([
+            $this->address,
+            $locLine !== '' ? $locLine : null,
+        ], fn ($v) => filled($v)));
+    }
 
     protected $guarded = ['id'];
     protected $casts   = ['settings' => 'array', 'approved_at' => 'datetime'];
-    protected $searchable = ['store_name', 'email', 'city'];
+    protected $searchable = ['store_name', 'email', 'city', 'description'];
+
+    public function filterCountry($query, string $value): void
+    {
+        $query->where('country', $value);
+    }
+
+    public function filterState($query, string $value): void
+    {
+        $query->where('state', $value);
+    }
+
+    public function filterCity($query, string $value): void
+    {
+        $like = '%'.addcslashes($value, '%_\\').'%';
+        $query->where('city', 'LIKE', $like);
+    }
 
     // ── Relationships ──
     public function user(): BelongsTo     { return $this->belongsTo(User::class); }

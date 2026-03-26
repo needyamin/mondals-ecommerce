@@ -54,7 +54,11 @@
                     <button type="submit" class="btn btn-primary w-100 fw-bold py-2" style="border-radius: 2px;">Create account</button>
                 </form>
 
-                <p class="text-center small text-muted mt-4 mb-0">
+                <p class="text-center small text-muted mt-4 mb-1">
+                    Want to sell?
+                    <a href="{{ route('register.vendor') }}" class="fw-bold">Become a seller</a>
+                </p>
+                <p class="text-center small text-muted mb-0">
                     Already registered?
                     <a href="{{ route('login') }}" class="fw-bold">Sign in</a>
                 </p>

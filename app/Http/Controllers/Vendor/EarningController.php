@@ -8,40 +8,56 @@ use Illuminate\Http\Request;
 
 class EarningController extends Controller
 {
-    /**
-     * Earnings overview and history.
-     */
     public function index(Request $request)
     {
-        $vendor = auth()->user()->vendor;
+        $vendor = $this->vendorOrFail();
 
         $earnings = VendorEarning::where('vendor_id', $vendor->id)
-            ->with(['order:id,order_number,created_at', 'orderItem:id,product_name,quantity,subtotal'])
-            ->when($request->input('is_paid'), fn($q, $v) => $q->where('is_paid', filter_var($v, FILTER_VALIDATE_BOOLEAN)))
+            ->with(['order', 'orderItem'])
+            ->when($request->filled('is_paid'), fn ($q) => $q->where('is_paid', $request->boolean('is_paid')))
             ->latest()
             ->paginate(20)
             ->withQueryString();
 
         $summary = [
-            'total'  => VendorEarning::where('vendor_id', $vendor->id)->sum('vendor_earning'),
-            'unpaid' => VendorEarning::where('vendor_id', $vendor->id)->unpaid()->sum('vendor_earning'),
-            'paid'   => VendorEarning::where('vendor_id', $vendor->id)->where('is_paid', true)->sum('vendor_earning'),
+            'total'  => round_money((float) VendorEarning::where('vendor_id', $vendor->id)->sum('vendor_earning')),
+            'unpaid' => round_money((float) VendorEarning::where('vendor_id', $vendor->id)->unpaid()->sum('vendor_earning')),
+            'paid'   => round_money((float) VendorEarning::where('vendor_id', $vendor->id)->where('is_paid', true)->sum('vendor_earning')),
         ];
 
         return view('vendor.earnings.index', compact('earnings', 'summary'));
     }
 
-    /**
-     * Payout history.
-     */
     public function payouts()
     {
-        $vendor = auth()->user()->vendor;
+        $vendor = $this->vendorOrFail();
 
         $payouts = VendorPayout::where('vendor_id', $vendor->id)
             ->latest()
-            ->paginate(15);
+            ->paginate(15)
+            ->withQueryString();
 
-        return view('vendor.earnings.payouts', compact('payouts'));
+        $lifetimeDisbursed = round_money((float) VendorPayout::where('vendor_id', $vendor->id)
+            ->where('status', 'completed')
+            ->sum('amount'));
+
+        return view('vendor.earnings.payouts', compact('payouts', 'vendor', 'lifetimeDisbursed'));
+    }
+
+    public function payoutReceipt(int $id)
+    {
+        $vendor = $this->vendorOrFail();
+
+        $payout = VendorPayout::where('vendor_id', $vendor->id)->findOrFail($id);
+
+        return view('vendor.earnings.payout-receipt', compact('payout', 'vendor'));
+    }
+
+    private function vendorOrFail()
+    {
+        $vendor = auth()->user()?->vendor;
+        abort_unless($vendor, 403, 'Vendor profile not found.');
+
+        return $vendor;
     }
 }

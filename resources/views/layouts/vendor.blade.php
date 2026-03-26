@@ -3,13 +3,13 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title', 'Vendor Terminal') | Mondals Ecommerce</title>
+    <title>@yield('title', 'Vendor Panel') | Mondals Ecommerce</title>
     
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script>
-        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        if (localStorage.vendorTheme === 'dark' || (!('vendorTheme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark')
         } else {
             document.documentElement.classList.remove('dark')
@@ -29,9 +29,12 @@
             <div class="flex items-center space-x-3 w-full">
                 <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-vendor-400 to-teal-600 flex items-center justify-center text-white font-heading font-bold text-xl shadow-lg shadow-vendor-500/30">V</div>
                 <div class="flex flex-col">
-                    <span class="text-white font-heading font-bold text-lg tracking-tight leading-tight">Vendor<span class="text-vendor-400">Desk</span></span>
+                    <span class="text-white font-heading font-bold text-lg tracking-tight leading-tight">Vendor<span class="text-vendor-400">Panel</span></span>
                 </div>
             </div>
+            <button @click="sidebarOpen = false" class="ml-auto lg:hidden text-slate-400 hover:text-white focus:outline-none">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
         </div>
         
         <nav class="flex-1 overflow-y-auto px-4 py-6 scrollbar-hide space-y-1">
@@ -101,10 +104,16 @@
                     <svg x-cloak x-show="darkMode" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                 </button>
 
+                <button class="w-10 h-10 rounded-full flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors relative">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                    <span class="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border border-white dark:border-slate-900"></span>
+                </button>
+
                 <div class="h-6 w-px bg-slate-200 dark:bg-slate-700 hidden sm:block"></div>
 
-                <a href="{{ route('home') }}" target="_blank" class="hidden sm:flex items-center text-sm font-medium text-vendor-600 dark:text-vendor-400 hover:underline">
-                    Live Storefront &nearr;
+                <a href="{{ route('home') }}" target="_blank" class="hidden sm:flex items-center text-sm font-medium text-vendor-600 dark:text-vendor-400 hover:text-vendor-800 dark:hover:text-vendor-300">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                    Storefront
                 </a>
                 
                 <form method="POST" action="/logout">

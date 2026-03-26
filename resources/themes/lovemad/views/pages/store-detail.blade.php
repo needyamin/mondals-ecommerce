@@ -3,6 +3,7 @@
 @section('title', $vendor->store_name)
 
 @section('content')
+@php($psort = request('sort', '-created_at'))
 <div class="container py-3">
 
     <nav aria-label="breadcrumb" class="mb-3">
@@ -14,21 +15,26 @@
     </nav>
 
     {{-- Store Header Banner --}}
-    <div class="position-relative overflow-hidden mb-3 text-white" style="background: linear-gradient(135deg, var(--lm-secondary) 0%, #1a1a2e 100%); border-radius: 4px;">
+    <div class="position-relative overflow-hidden mb-3 text-white" style="background: linear-gradient(135deg, var(--lm-secondary) 0%, #1a1a2e 100%); border-radius: 4px;@if($vendor->display_banner) background-image: linear-gradient(135deg, rgba(0,0,0,.55), rgba(26,26,46,.75)), url('{{ $vendor->display_banner }}'); background-size: cover; background-position: center; @endif">
         <div class="position-absolute end-0 top-0 bottom-0" style="width: 40%; background: linear-gradient(135deg, transparent, rgba(248,86,6,.2));"></div>
         <div class="position-relative p-4 p-md-5 d-flex flex-column flex-md-row align-items-center" style="z-index: 2;">
-            <div class="rounded-circle bg-white d-flex align-items-center justify-content-center flex-shrink-0 me-md-4 mb-3 mb-md-0"
-                 style="width: 80px; height: 80px; font-size: 32px; font-weight: 900; color: var(--lm-primary);">
-                {{ substr($vendor->store_name, 0, 1) }}
+            <div class="rounded-circle bg-white overflow-hidden d-flex align-items-center justify-content-center flex-shrink-0 me-md-4 mb-3 mb-md-0"
+                 style="width: 80px; height: 80px;">
+                <img src="{{ $vendor->display_image }}" alt="" class="w-100 h-100" style="object-fit: cover;">
             </div>
             <div class="text-center text-md-start flex-grow-1">
                 <h1 class="fw-bold mb-1" style="font-size: 24px;">{{ $vendor->store_name }}</h1>
                 <p class="mb-3 opacity-75" style="font-size: 13px;">Official Retail Partner</p>
                 <div class="d-flex flex-wrap gap-3 justify-content-center justify-content-md-start" style="font-size: 13px;">
+                    @if(\App\Models\Plugin::isActiveSlug('product-reviews'))
                     <span class="d-inline-flex align-items-center">
                         <i class="bi bi-star-fill text-warning me-1"></i>
                         <strong>{{ number_format($vendor->products->flatMap->reviews->avg('rating') ?? 0, 1) }}</strong>
-                        <span class="opacity-75 ms-1">Average Rating</span>
+                        <span class="opacity-75 ms-1">Avg. rating</span>
+                    </span>
+                    @endif
+                    <span class="d-inline-flex align-items-center rounded-pill px-3 py-1" style="background: rgba(255,255,255,.1);">
+                        {{ $products->total() }} products
                     </span>
                     <span class="d-inline-flex align-items-center rounded-pill px-3 py-1" style="background: rgba(255,255,255,.1);">
                         Joined {{ $vendor->created_at->format('M Y') }}
@@ -38,10 +44,59 @@
         </div>
     </div>
 
-    {{-- Toolbar --}}
-    <div class="section-title-bar mb-0">
-        <h2><i class="bi bi-grid me-2"></i>Store Catalog</h2>
-        <span class="text-muted" style="font-size: 13px;">{{ $products->total() }} Products</span>
+    @if(filled($vendor->description) || filled($vendor->email) || filled($vendor->phone) || count($vendor->address_lines))
+    <div class="mb-3">
+        <button class="btn btn-outline-secondary w-100 d-flex justify-content-between align-items-center py-2 fw-bold shadow-sm" style="border-radius: 4px;" type="button" data-bs-toggle="collapse" data-bs-target="#storeInfoCollapse" aria-expanded="false" aria-controls="storeInfoCollapse">
+            <span><i class="bi bi-shop-window me-2"></i>Store information <span class="fw-normal text-muted small">(about, contact, location)</span></span>
+            <i class="bi bi-chevron-down"></i>
+        </button>
+        <div class="collapse" id="storeInfoCollapse">
+            <div class="row g-3 mt-2">
+                @if(filled($vendor->description))
+                <div class="col-12 col-lg-8">
+                    <div class="bg-white shadow-sm h-100 p-4 border-start border-4 border-primary" style="border-radius: 4px;">
+                        <div class="text-muted text-uppercase fw-bold mb-2" style="font-size: 11px; letter-spacing: .06em;"><i class="bi bi-info-circle me-1"></i>About</div>
+                        <p class="mb-0 text-secondary" style="font-size: 14px; white-space: pre-line; line-height: 1.6;">{{ $vendor->description }}</p>
+                    </div>
+                </div>
+                @endif
+                <div class="col-12 @if(filled($vendor->description)) col-lg-4 @endif">
+                    <div class="bg-white shadow-sm p-4 h-100" style="border-radius: 4px;">
+                        @if(filled($vendor->email) || filled($vendor->phone))
+                        <div class="text-muted text-uppercase fw-bold mb-3" style="font-size: 11px; letter-spacing: .06em;">Contact</div>
+                        @if(filled($vendor->email))
+                        <div class="mb-3 pb-3 border-bottom"><i class="bi bi-envelope me-2 text-primary"></i><a href="mailto:{{ $vendor->email }}" class="text-break small">{{ $vendor->email }}</a></div>
+                        @endif
+                        @if(filled($vendor->phone))
+                        <div class="mb-3 @if(!count($vendor->address_lines)) mb-0 @else pb-3 border-bottom @endif"><i class="bi bi-telephone me-2 text-primary"></i><a href="tel:{{ preg_replace('/\s+/', '', $vendor->phone) }}" class="small">{{ $vendor->phone }}</a></div>
+                        @endif
+                        @endif
+                        @if(count($vendor->address_lines))
+                        <div class="text-muted text-uppercase fw-bold mb-2" style="font-size: 11px; letter-spacing: .06em;">Location</div>
+                        <p class="mb-0 text-secondary small" style="white-space: pre-line; line-height: 1.55;">{{ implode("\n", $vendor->address_lines) }}</p>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <div class="section-title-bar mb-0 d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <h2 class="mb-0"><i class="bi bi-grid me-2"></i>Catalog</h2>
+        <div class="d-flex align-items-center gap-2">
+            <span class="text-muted" style="font-size: 13px;">{{ $products->total() }} items</span>
+            <form method="get" class="d-flex align-items-center gap-1">
+                <label class="small text-muted mb-0">Sort</label>
+                <select name="sort" class="form-select form-select-sm" style="width: auto; min-width: 11rem; border-radius: 2px;" onchange="this.form.submit()">
+                    <option value="-created_at" @selected($psort === '-created_at')>Newest</option>
+                    <option value="price" @selected($psort === 'price')>Price ↑</option>
+                    <option value="-price" @selected($psort === '-price')>Price ↓</option>
+                    <option value="name" @selected($psort === 'name')>Name A–Z</option>
+                    <option value="-name" @selected($psort === '-name')>Name Z–A</option>
+                </select>
+            </form>
+        </div>
     </div>
 
     {{-- Products --}}

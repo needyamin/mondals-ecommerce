@@ -27,7 +27,7 @@ class CartController extends Controller
         if (auth()->check()) {
             $cart = $this->cartService->getOrCreateCart()->load('items.product.images', 'items.productVariant', 'coupon');
             $items = $cart->items;
-            $subtotal = $items->sum(fn($item) => $item->price * $item->quantity);
+            $subtotal = cart_subtotal_from_items($items);
         } else {
             // Session-based cart for guests
             $sessionCart = session('cart', []);
@@ -35,10 +35,11 @@ class CartController extends Controller
                 $product = \App\Models\Product::find($entry['product_id']);
                 if ($product) {
                     $entry['product'] = $product;
-                    $entry['line_total'] = $product->price * $entry['quantity'];
+                    $entry['line_total'] = line_total((float) $product->price, (int) $entry['quantity']);
                     $subtotal += $entry['line_total'];
                 }
             }
+            $subtotal = round_money((float) $subtotal);
             $items = collect($sessionCart);
         }
 

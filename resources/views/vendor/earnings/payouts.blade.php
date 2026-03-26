@@ -3,6 +3,16 @@
 @section('title', 'Payout Log Archive')
 
 @section('content')
+    @if(session('success'))
+        <div class="mb-6 p-4 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 text-emerald-700 dark:text-emerald-300 text-sm font-medium">{{ session('success') }}</div>
+    @endif
+
+    <div class="mb-6 flex flex-wrap gap-2">
+        <a href="{{ route('vendor.earnings.index') }}" class="px-4 py-2 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">Income reports</a>
+        <a href="{{ route('vendor.payouts.index') }}" class="px-4 py-2 rounded-xl text-xs font-bold bg-vendor-600 text-white">Payout history</a>
+        <a href="{{ route('vendor.settings.index') }}" class="px-4 py-2 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">Bank settings</a>
+    </div>
+
     <div class="mb-10 flex flex-col md:flex-row justify-between items-center group transition duration-300">
         <div class="z-10 text-center md:text-left">
             <h2 class="text-4xl font-extrabold text-slate-900 dark:text-white font-heading tracking-tighter">Bank Withdrawal Protocol</h2>
@@ -19,28 +29,28 @@
     <!-- Payout Performance -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
         <div class="bg-white dark:bg-darkpanel p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden group">
-            <span class="absolute -right-4 -bottom-4 w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-full group-hover:scale-150 transition-transform duration-500"></span>
+            <span class="absolute -right-4 -bottom-4 w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-full pointer-events-none group-hover:scale-150 transition-transform duration-500"></span>
             <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Payout Frequency</p>
             <h4 class="text-2xl font-black font-heading text-slate-900 dark:text-white">Monthly Cycle</h4>
             <p class="text-xs text-slate-500 mt-1 uppercase font-bold tracking-tighter">Settled every 1st & 15th</p>
         </div>
         
         <div class="bg-white dark:bg-darkpanel p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden group">
-            <span class="absolute -right-4 -bottom-4 w-16 h-16 bg-blue-50 dark:bg-blue-900/10 rounded-full group-hover:scale-150 transition-transform duration-500"></span>
+            <span class="absolute -right-4 -bottom-4 w-16 h-16 bg-blue-50 dark:bg-blue-900/10 rounded-full pointer-events-none group-hover:scale-150 transition-transform duration-500"></span>
             <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Bank of Record</p>
-            <h4 class="text-2xl font-black font-heading text-slate-900 dark:text-white uppercase truncate">{{ auth()->user()->vendor->bank_name ?? 'Not Set' }}</h4>
+            <h4 class="text-2xl font-black font-heading text-slate-900 dark:text-white uppercase truncate">{{ data_get($vendor->settings, 'banking.bank_name') ?: 'Not set' }}</h4>
             <p class="text-xs text-slate-500 mt-1 italic font-medium">Verified Channel</p>
         </div>
 
         <div class="bg-white dark:bg-darkpanel p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden group">
-            <span class="absolute -right-4 -bottom-4 w-16 h-16 bg-emerald-50 dark:bg-emerald-900/10 rounded-full group-hover:scale-150 transition-transform duration-500"></span>
+            <span class="absolute -right-4 -bottom-4 w-16 h-16 bg-emerald-50 dark:bg-emerald-900/10 rounded-full pointer-events-none group-hover:scale-150 transition-transform duration-500"></span>
             <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Total Disbursed</p>
-            <h4 class="text-2xl font-black font-heading text-emerald-500 tracking-tighter">৳{{ number_format($payouts->sum('amount'), 2) }}</h4>
+            <h4 class="text-2xl font-black font-heading text-emerald-500 tracking-tighter">৳{{ number_format($lifetimeDisbursed ?? 0, 2) }}</h4>
             <p class="text-xs text-slate-400 mt-1 font-bold uppercase tracking-widest">Lifetime Volume</p>
         </div>
 
         <div class="bg-white dark:bg-darkpanel p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden group">
-            <span class="absolute -right-4 -bottom-4 w-16 h-16 bg-amber-50 dark:bg-amber-900/10 rounded-full group-hover:scale-150 transition-transform duration-500"></span>
+            <span class="absolute -right-4 -bottom-4 w-16 h-16 bg-amber-50 dark:bg-amber-900/10 rounded-full pointer-events-none group-hover:scale-150 transition-transform duration-500"></span>
             <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Protocol Status</p>
             <div class="flex items-center space-x-2 mt-1">
                  <div class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></div>
@@ -80,7 +90,7 @@
                             <td class="px-8 py-6">
                                 <div class="flex flex-col">
                                     <span class="text-sm font-black text-slate-800 dark:text-white tracking-widest font-heading">{{ $payout->created_at->format('M d, Y') }}</span>
-                                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Processed at 12:00 PM</span>
+                                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">{{ ($payout->paid_at ?? $payout->created_at)->format('h:i A') }}</span>
                                 </div>
                             </td>
                             <td class="px-8 py-6">
@@ -90,7 +100,7 @@
                                      </div>
                                      <div class="flex flex-col">
                                         <span class="text-sm font-bold text-slate-700 dark:text-slate-300 capitalize tracking-tight">{{ $payout->payment_method ?? 'Bank Transfer' }}</span>
-                                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">{{ auth()->user()->vendor->account_number ? 'XX' . substr(auth()->user()->vendor->account_number, -4) : 'Direct Account' }}</span>
+                                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">@php $acct = data_get($vendor->settings, 'banking.account_number'); @endphp{{ $acct && strlen($acct) >= 4 ? '****'.substr($acct, -4) : ($acct ? '****' : 'On file') }}</span>
                                      </div>
                                 </div>
                             </td>
@@ -105,6 +115,7 @@
                                             'processing'=> 'bg-blue-50 text-blue-600 border-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800/50',
                                             'completed' => 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800/50',
                                             'failed'    => 'bg-rose-50 text-rose-600 border-rose-100 dark:bg-rose-900/30 dark:text-rose-400 dark:border-rose-800/50',
+                                            'cancelled' => 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700',
                                         ];
                                         $colorClass = $statuses[$payout->status] ?? 'bg-slate-100 text-slate-600 border-slate-200';
                                     @endphp
@@ -114,9 +125,9 @@
                                 </div>
                             </td>
                             <td class="px-8 py-6 text-right">
-                                <button class="p-3 bg-white dark:bg-slate-700 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm text-slate-400 hover:text-vendor-600 hover:shadow-lg transition-all transform hover:-translate-y-1">
+                                <a href="{{ route('vendor.payouts.receipt', $payout->id) }}" target="_blank" rel="noopener" class="inline-flex p-3 bg-white dark:bg-slate-700 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm text-slate-400 hover:text-vendor-600 hover:shadow-lg transition-all" title="Receipt">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                </button>
+                                </a>
                             </td>
                         </tr>
                     @empty
@@ -135,7 +146,7 @@
                 </tbody>
             </table>
         </div>
-        @if($payouts->total() > 15)
+        @if($payouts->hasPages())
             <div class="p-8 bg-slate-50/50 dark:bg-slate-800/10 border-t border-slate-100 dark:border-slate-800">
                 {{ $payouts->links() }}
             </div>
@@ -144,7 +155,7 @@
 
     <!-- Protocol Disclaimer -->
     <div class="mt-12 p-8 bg-slate-900 rounded-[35px] text-white shadow-2xl shadow-indigo-500/10 flex flex-col md:flex-row items-center relative overflow-hidden group">
-         <div class="absolute -right-24 -top-24 w-64 h-64 bg-vendor-500/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700"></div>
+         <div class="absolute -right-24 -top-24 w-64 h-64 bg-vendor-500/10 rounded-full blur-3xl pointer-events-none group-hover:scale-150 transition-transform duration-700"></div>
          <div class="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center text-vendor-400 mb-4 md:mb-0 md:mr-8 flex-shrink-0 border border-slate-700">
              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
          </div>

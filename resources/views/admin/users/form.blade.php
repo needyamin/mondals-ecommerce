@@ -81,36 +81,32 @@
                 </h3>
                 
                 <div class="space-y-8">
+                    @php
+                        $currentRole = old('role', $user ? ($user->getRoleNames()->first() ?? 'customer') : 'customer');
+                        if (! in_array($currentRole, ['customer', 'vendor', 'admin', 'staff'], true)) {
+                            $currentRole = 'customer';
+                        }
+                    @endphp
                     <div class="space-y-4">
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Clearance Level</label>
-                        <div class="grid grid-cols-1 gap-3">
-                            @php 
-                                $currentRole = $user ? ($user->roles->first()->name ?? 'customer') : 'customer';
-                            @endphp
-                            <label class="relative flex items-center p-4 bg-slate-800 rounded-2xl cursor-pointer hover:bg-slate-700 transition group border-2 border-transparent has-[:checked]:border-brand-500">
-                                <input type="radio" name="role" value="customer" {{ $currentRole === 'customer' ? 'checked' : '' }} class="hidden">
-                                <span class="w-4 h-4 rounded-full border-2 border-slate-600 flex items-center justify-center p-1 group-has-[:checked]:bg-brand-500 group-has-[:checked]:border-brand-500"></span>
-                                <span class="ml-3 text-sm font-black uppercase tracking-widest">Customer</span>
-                            </label>
-                            <label class="relative flex items-center p-4 bg-slate-800 rounded-2xl cursor-pointer hover:bg-slate-700 transition group border-2 border-transparent has-[:checked]:border-brand-500">
-                                <input type="radio" name="role" value="vendor" {{ $currentRole === 'vendor' ? 'checked' : '' }} class="hidden">
-                                <span class="w-4 h-4 rounded-full border-2 border-slate-600 flex items-center justify-center p-1 group-has-[:checked]:bg-brand-500 group-has-[:checked]:border-brand-500"></span>
-                                <span class="ml-3 text-sm font-black uppercase tracking-widest">Merchant/Vendor</span>
-                            </label>
-                            <label class="relative flex items-center p-4 bg-slate-800 rounded-2xl cursor-pointer hover:bg-slate-700 transition group border-2 border-transparent has-[:checked]:border-brand-500">
-                                <input type="radio" name="role" value="admin" {{ $currentRole === 'admin' ? 'checked' : '' }} class="hidden">
-                                <span class="w-4 h-4 rounded-full border-2 border-slate-600 flex items-center justify-center p-1 group-has-[:checked]:bg-brand-500 group-has-[:checked]:border-brand-500"></span>
-                                <span class="ml-3 text-sm font-black uppercase tracking-widest text-indigo-400">System Admin</span>
-                            </label>
-                        </div>
+                        <label for="user_role" class="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Clearance Level</label>
+                        <select name="role" id="user_role" required class="w-full bg-slate-800 border border-slate-700 rounded-2xl px-5 py-4 text-white font-bold text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 shadow-inner appearance-none cursor-pointer">
+                            <option value="customer" @selected($currentRole === 'customer')>Customer</option>
+                            <option value="vendor" @selected($currentRole === 'vendor')>Merchant / Vendor</option>
+                            <option value="staff" @selected($currentRole === 'staff')>Staff</option>
+                            <option value="admin" @selected($currentRole === 'admin')>System Admin</option>
+                        </select>
+                        @error('role')
+                            <p class="text-xs font-bold text-rose-400">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <div class="space-y-4 pt-8 border-t border-white/5">
                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Account State</label>
-                        <select name="status" class="w-full bg-slate-800 border-none rounded-2xl px-5 py-4 text-white font-bold text-sm focus:ring-2 focus:ring-brand-500 shadow-inner">
-                            <option value="active" {{ ($user->status ?? '') === 'active' ? 'selected' : '' }}>Operational (Active)</option>
-                            <option value="inactive" {{ ($user->status ?? '') === 'inactive' ? 'selected' : '' }}>Dormant (Inactive)</option>
-                            <option value="banned" {{ ($user->status ?? '') === 'banned' ? 'selected' : '' }}>Restricted (Banned)</option>
+                        <select name="status" class="w-full bg-slate-800 border border-slate-700 rounded-2xl px-5 py-4 text-white font-bold text-sm focus:ring-2 focus:ring-brand-500 shadow-inner">
+                            @php($st = old('status', $user->status ?? 'active'))
+                            <option value="active" @selected($st === 'active')>Operational (Active)</option>
+                            <option value="inactive" @selected($st === 'inactive')>Dormant (Inactive)</option>
+                            <option value="banned" @selected($st === 'banned')>Restricted (Banned)</option>
                         </select>
                     </div>
 

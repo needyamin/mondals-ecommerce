@@ -16,6 +16,6 @@ class CartItem extends Model
 
     public function getSubtotalAttribute(): float
     {
-        return $this->price * $this->quantity;
+        return line_total((float) $this->price, (int) $this->quantity);
     }
 }

@@ -50,8 +50,7 @@ class Product extends Model
     // ── Accessors ──
     public function getDiscountPercentAttribute(): ?float
     {
-        if (!$this->compare_price || $this->compare_price <= $this->price) return null;
-        return round((($this->compare_price - $this->price) / $this->compare_price) * 100, 1);
+        return savings_percent_from_compare((float) $this->compare_price, (float) $this->price);
     }
 
     public function getAverageRatingAttribute(): float
@@ -65,6 +64,18 @@ class Product extends Model
 
     public function getPrimaryImageAttribute(): ?string
     {
+        if ($this->relationLoaded('images')) {
+            if ($this->images->isEmpty()) {
+                return $this->thumbnail;
+            }
+            $img = $this->images->firstWhere('is_primary', true) ?? $this->images->first();
+            if ($img && filled($img->image)) {
+                return $img->image;
+            }
+
+            return $this->thumbnail;
+        }
+
         return $this->images()->where('is_primary', true)->value('image') ?? $this->thumbnail;
     }
 

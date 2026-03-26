@@ -12,6 +12,13 @@
         </div>
     </div>
 @endif
+@if(session('info'))
+    <div class="container mt-3">
+        <div class="alert alert-info border-0 shadow-sm rounded-0 py-2" style="font-size: 13px;" role="alert">
+            <i class="bi bi-info-circle-fill me-2"></i> {{ session('info') }}
+        </div>
+    </div>
+@endif
 
 {{-- =================== HERO BANNER SECTION =================== --}}
 <section class="mb-3" style="background: linear-gradient(135deg, var(--lm-primary) 0%, #ff8c42 100%);">
@@ -33,6 +40,9 @@
                     </a>
                     <a href="{{ route('stores.index') }}" class="btn btn-outline-light btn-lg fw-medium px-4" style="border-radius: 2px; font-size: 14px;">
                         View Stores
+                    </a>
+                    <a href="{{ route('register.vendor') }}" class="btn btn-outline-light btn-lg fw-medium px-4" style="border-radius: 2px; font-size: 14px;">
+                        Sell with us
                     </a>
                 </div>
             </div>

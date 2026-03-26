@@ -3,6 +3,17 @@
 @section('title', 'Received Orders')
 
 @section('content')
+    @if(session('success'))
+        <div class="mb-6 p-4 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-sm font-medium">
+            {{ session('success') }}
+        </div>
+    @endif
+    @if($errors->any())
+        <div class="mb-6 p-4 rounded-xl bg-rose-50 dark:bg-rose-900/30 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-sm">
+            <ul class="list-disc list-inside space-y-1">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+        </div>
+    @endif
+
     <div class="mb-10 flex flex-col md:flex-row justify-between items-center group transition duration-300">
         <div class="z-10 text-center md:text-left">
             <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white font-heading tracking-tight">Manage Your Sales Queue</h2>
@@ -16,8 +27,15 @@
         </div>
     </div>
 
+    <div class="flex flex-wrap gap-2 mb-8">
+        <a href="{{ route('vendor.orders.index', array_filter(request()->only('search'))) }}" class="px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-darkpanel text-center text-xs font-bold text-slate-700 dark:text-slate-300 {{ !request('status') ? 'ring-2 ring-vendor-500' : '' }}">All</a>
+        @foreach(['pending'=>'Pending','confirmed'=>'Confirmed','processing'=>'Processing','shipped'=>'Shipped','delivered'=>'Delivered','completed'=>'Completed','cancelled'=>'Cancelled','refunded'=>'Refunded','failed'=>'Failed','on_hold'=>'On hold'] as $st => $label)
+            <a href="{{ route('vendor.orders.index', array_merge(array_filter(request()->only('search')), ['status' => $st])) }}" class="px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-darkpanel text-center text-xs font-bold text-slate-700 dark:text-slate-300 {{ request('status') === $st ? 'ring-2 ring-vendor-500 bg-vendor-50/50 dark:bg-vendor-900/20' : '' }}">{{ $label }}</a>
+        @endforeach
+    </div>
+
     <!-- Filters & Stats Overview -->
-    <div class="grid grid-cols-1 xl:grid-cols-12 gap-8 mb-10">
+    <div class="grid grid-cols-1 xl:grid-cols-12 gap-8 mb-10 xl:items-start">
         
         <div class="xl:col-span-9 bg-white dark:bg-darkpanel rounded-3xl border border-slate-100 dark:border-slate-800 p-6 shadow-sm">
             <form action="{{ route('vendor.orders.index') }}" method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
@@ -33,13 +51,17 @@
                 <div>
                     <label class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Fulfillment Status</label>
                     <select name="status" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border-none rounded-2xl text-sm focus:ring-2 focus:ring-vendor-500 text-slate-600 dark:text-slate-300 shadow-inner">
-                        <option value="">All Active Orders</option>
+                        <option value="">All orders</option>
                         <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
                         <option value="confirmed" {{ request('status') == 'confirmed' ? 'selected' : '' }}>Confirmed</option>
                         <option value="processing" {{ request('status') == 'processing' ? 'selected' : '' }}>Processing</option>
                         <option value="shipped" {{ request('status') == 'shipped' ? 'selected' : '' }}>Shipped</option>
-                        <option value="delivered" {{ request('status') == 'delivered' ? 'selected' : '' }}>Successfully Delivered</option>
-                        <option value="canceled" {{ request('status') == 'canceled' ? 'selected' : '' }}>Canceled</option>
+                        <option value="delivered" {{ request('status') == 'delivered' ? 'selected' : '' }}>Delivered</option>
+                        <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Completed</option>
+                        <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                        <option value="refunded" {{ request('status') == 'refunded' ? 'selected' : '' }}>Refunded</option>
+                        <option value="failed" {{ request('status') == 'failed' ? 'selected' : '' }}>Failed</option>
+                        <option value="on_hold" {{ request('status') == 'on_hold' ? 'selected' : '' }}>On hold</option>
                     </select>
                 </div>
                 <div>
@@ -51,11 +73,10 @@
             </form>
         </div>
 
-        <div class="xl:col-span-3 bg-vendor-600 dark:bg-vendor-900/40 rounded-3xl p-6 text-white shadow-xl shadow-vendor-600/20 flex flex-col justify-center relative overflow-hidden group">
-            <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-white/10 rounded-full blur-xl group-hover:scale-150 transition-transform duration-500"></div>
-            <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-vendor-200 mb-1">Queue Overview</p>
-            <h3 class="text-4xl font-extrabold font-heading">{{ $orders->total() }}</h3>
-            <p class="text-sm font-medium text-vendor-100 mt-1 italic">Awaiting Action</p>
+        <div class="xl:col-span-3 bg-vendor-600 dark:bg-vendor-900/40 rounded-3xl px-5 py-4 text-white shadow-xl shadow-vendor-600/20 flex items-center gap-3 min-h-0 relative overflow-hidden">
+            <div class="absolute -right-4 -bottom-4 w-16 h-16 bg-white/10 rounded-full blur-lg pointer-events-none"></div>
+            <span class="relative text-3xl font-extrabold font-heading tabular-nums leading-none shrink-0">{{ $orders->total() }}</span>
+            <span class="relative text-[11px] font-bold uppercase tracking-widest text-vendor-100 leading-snug">Queue overview · Awaiting action</span>
         </div>
 
     </div>
@@ -70,7 +91,7 @@
                         <th class="px-8 py-5">Recipient Information</th>
                         <th class="px-8 py-5">Cart Depth</th>
                         <th class="px-8 py-5 text-center">Lifecycle Status</th>
-                        <th class="px-8 py-5">Your Revenue (Net)</th>
+                        <th class="px-8 py-5">Your items total</th>
                         <th class="px-8 py-5 text-right">Access Terminal</th>
                     </tr>
                 </thead>
@@ -85,8 +106,8 @@
                             </td>
                             <td class="px-8 py-6">
                                 <div class="flex flex-col">
-                                    <span class="text-sm font-bold text-slate-700 dark:text-slate-200 mb-1">{{ $order->user->name ?? $order->shipping_first_name }}</span>
-                                    <span class="text-[10px] text-slate-400 uppercase tracking-widest font-bold font-heading">{{ $order->shipping_city }}, {{ $order->shipping_country }}</span>
+                                    <span class="text-sm font-bold text-slate-700 dark:text-slate-200 mb-1">{{ optional($order->user)->name ?? trim(($order->shipping_first_name ?? '').' '.($order->shipping_last_name ?? '')) ?: '—' }}</span>
+                                    <span class="text-[10px] text-slate-400 uppercase tracking-widest font-bold font-heading">{{ $order->shipping_city ?? '—' }}, {{ $order->shipping_country ?? '—' }}</span>
                                 </div>
                             </td>
                             <td class="px-8 py-6">
@@ -106,7 +127,11 @@
                                             'processing' => 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800/50',
                                             'shipped'    => 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 border-purple-200 dark:border-purple-800/50',
                                             'delivered'  => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/50',
-                                            'canceled'   => 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 border-rose-200 dark:border-rose-800/50',
+                                            'completed'  => 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400 border-teal-200 dark:border-teal-800/50',
+                                            'cancelled'  => 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 border-rose-200 dark:border-rose-800/50',
+                                            'refunded'  => 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 border-orange-200 dark:border-orange-800/50',
+                                            'failed'  => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800/50',
+                                            'on_hold'  => 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-600',
                                         ];
                                         $colorClass = $statuses[$order->status] ?? 'bg-slate-100 text-slate-500 border-slate-200';
                                     @endphp
@@ -118,7 +143,15 @@
                             <td class="px-8 py-6">
                                 <div class="flex flex-col">
                                     <span class="text-base font-bold text-slate-900 dark:text-white tracking-tight">৳{{ number_format($order->items->sum('subtotal'), 2) }}</span>
-                                    <span class="text-[10px] text-emerald-500 font-bold uppercase tracking-widest">{{ $order->payment_status }}</span>
+                                    @php
+                                        $payCls = match ($order->payment_status) {
+                                            'paid' => 'text-emerald-600 dark:text-emerald-400',
+                                            'pending' => 'text-amber-600 dark:text-amber-400',
+                                            'failed' => 'text-rose-600 dark:text-rose-400',
+                                            default => 'text-slate-500 dark:text-slate-400',
+                                        };
+                                    @endphp
+                                    <span class="text-[10px] font-bold uppercase tracking-widest {{ $payCls }}">{{ $order->payment_status }}</span>
                                 </div>
                             </td>
                             <td class="px-8 py-6 text-right">
@@ -145,7 +178,7 @@
                 </tbody>
             </table>
         </div>
-        @if($orders->total() > 15)
+        @if($orders->hasPages())
             <div class="p-6 bg-slate-50/50 dark:bg-slate-800/10 border-t border-slate-100 dark:border-slate-800">
                 {{ $orders->links() }}
             </div>

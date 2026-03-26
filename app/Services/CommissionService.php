@@ -24,9 +24,10 @@ class CommissionService
                 $vendor = Vendor::find($item->vendor_id);
                 if (!$vendor) continue;
 
-                $commissionRate = $vendor->commission_rate ?? 10;
-                $platformCommission = round($item->subtotal * ($commissionRate / 100), 2);
-                $vendorEarning = $item->subtotal - $platformCommission;
+                $lineSubtotal = (float) $item->subtotal;
+                $commissionRate = (float) ($vendor->commission_rate ?? 10);
+                $platformCommission = commission_amount($lineSubtotal, $commissionRate);
+                $vendorEarning = vendor_net_after_commission($lineSubtotal, $commissionRate);
 
                 VendorEarning::create([
                     'vendor_id'             => $vendor->id,
@@ -50,10 +51,10 @@ class CommissionService
         $earnings = $vendor->earnings();
 
         return [
-            'total_earned'     => round($earnings->sum('vendor_earning'), 2),
-            'total_commission' => round($earnings->sum('commission_amount'), 2),
-            'total_unpaid'     => round($earnings->unpaid()->sum('vendor_earning'), 2),
-            'total_paid'       => round($earnings->where('is_paid', true)->sum('vendor_earning'), 2),
+            'total_earned'     => round_money((float) $earnings->sum('vendor_earning')),
+            'total_commission' => round_money((float) $earnings->sum('commission_amount')),
+            'total_unpaid'     => round_money((float) $earnings->unpaid()->sum('vendor_earning')),
+            'total_paid'       => round_money((float) $earnings->where('is_paid', true)->sum('vendor_earning')),
             'total_orders'     => $earnings->distinct('order_id')->count('order_id'),
         ];
     }

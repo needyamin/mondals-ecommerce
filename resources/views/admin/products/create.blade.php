@@ -246,60 +246,7 @@
     </div>
 </form>
 
-<script>
-function createImageManager() {
-    return {
-        files: [],
-        primaryIdx: 0,
-        dragIdx: null,
-        dropHover: false,
-
-        onFilesSelected(e) {
-            this.addFiles(e.target.files);
-            e.target.value = '';
-        },
-
-        onDropFiles(e) {
-            this.addFiles(e.dataTransfer.files);
-        },
-
-        addFiles(fileList) {
-            var self = this;
-            Array.from(fileList).forEach(function(f) {
-                if (!f.type.startsWith('image/')) return;
-                var reader = new FileReader();
-                reader.onload = function(ev) {
-                    self.files.push({name: f.name, file: f, preview: ev.target.result});
-                    self.syncInput();
-                };
-                reader.readAsDataURL(f);
-            });
-        },
-
-        removeFile(idx) {
-            this.files.splice(idx, 1);
-            if (this.primaryIdx >= this.files.length) this.primaryIdx = Math.max(0, this.files.length - 1);
-            this.syncInput();
-        },
-
-        onDrop(toIdx) {
-            if (this.dragIdx === null || this.dragIdx === toIdx) return;
-            var wasPrimary = this.dragIdx === this.primaryIdx;
-            var moved = this.files.splice(this.dragIdx, 1)[0];
-            this.files.splice(toIdx, 0, moved);
-            if (wasPrimary) this.primaryIdx = toIdx;
-            this.dragIdx = null;
-            this.syncInput();
-        },
-
-        syncInput() {
-            var dt = new DataTransfer();
-            this.files.forEach(function(f){ dt.items.add(f.file); });
-            this.$refs.fileInput.files = dt.files;
-        }
-    };
-}
-</script>
+@include('partials.product-gallery-alpine')
 
 <style>
 input:checked ~ .dot { transform: translateX(100%); }

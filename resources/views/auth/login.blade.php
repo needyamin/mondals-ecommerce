@@ -53,6 +53,10 @@
                 New here?
                 <a href="{{ route('register') }}" class="font-bold text-primary hover:text-purple-600 dark:hover:text-indigo-400 transition-colors">Create an account</a>
             </p>
+            <p class="mt-3 text-center text-sm text-slate-500 dark:text-slate-400">
+                Sell on Mondals?
+                <a href="{{ route('register.vendor') }}" class="font-bold text-primary hover:text-purple-600 dark:hover:text-indigo-400 transition-colors">Seller sign up</a>
+            </p>
         </div>
 
         @if(config('app.debug'))

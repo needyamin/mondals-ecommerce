@@ -29,15 +29,12 @@ class CheckoutService
             }
         }
 
-        $taxableAmount = max(0, $subtotal - $discountAmount);
-        
-        // 2. Calculate tax (simplified global tax calculation)
+        $taxableAmount = taxable_after_discount($subtotal, $discountAmount);
+
+        // 2. Calculate tax (non-compound rates on same base)
         $taxRates = TaxRate::active()->ordered()->get();
-        $taxAmount = 0;
-        foreach ($taxRates as $rate) {
-            // Note: Compound tax logic could go here if needed
-            $taxAmount += round($taxableAmount * ($rate->rate / 100), 2);
-        }
+        $ratePercents = $taxRates->map(fn ($r) => (float) $r->rate)->all();
+        $taxAmount = tax_amount_from_rate_stack($taxableAmount, $ratePercents);
 
         // 3. Calculate shipping
         $shippingCost = 0;
@@ -58,7 +55,7 @@ class CheckoutService
         }
 
         // 4. Final Total
-        $total = $taxableAmount + $taxAmount + $shippingCost;
+        $total = checkout_grand_total($taxableAmount, $taxAmount, $shippingCost);
 
         return [
             'subtotal'             => $subtotal,
@@ -66,7 +63,7 @@ class CheckoutService
             'tax_amount'           => $taxAmount,
             'shipping_amount'      => $shippingCost,
             'shipping_method_name' => $shippingMethodName,
-            'total'                => round($total, 2),
+            'total'                => $total,
             'currency'             => $cart->currency ?? 'BDT',
         ];
     }
@@ -133,8 +130,7 @@ class CheckoutService
                 $variant = $item->productVariant;
                 
                 $itemTotal = $item->subtotal;
-                // Proportionally assign tax/discount if needed, keeping simple here
-                $itemTax = round($itemTotal * 0.15, 2); // Example rough estimate, typically calc per item
+                $itemTax = estimated_order_item_tax($itemTotal);
                 
                 OrderItem::create([
                     'order_id'           => $order->id,
@@ -148,8 +144,8 @@ class CheckoutService
                     'quantity'           => $item->quantity,
                     'subtotal'           => $itemTotal,
                     'discount_amount'    => 0, // Per-item discount could be added later
-                    'tax_amount'         => $itemTax, 
-                    'total'              => $itemTotal + $itemTax,
+                    'tax_amount'         => $itemTax,
+                    'total'              => line_total_with_tax((float) $itemTotal, $itemTax),
                 ]);
 
                 // Deduct Inventory Stock

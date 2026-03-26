@@ -3,6 +3,20 @@
 @section('title', 'Financial Intelligence')
 
 @section('content')
+    @if(session('success'))
+        <div class="mb-6 p-4 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 text-emerald-700 dark:text-emerald-300 text-sm font-medium">{{ session('success') }}</div>
+    @endif
+    @if($errors->any())
+        <div class="mb-6 p-4 rounded-xl bg-rose-50 dark:bg-rose-900/30 border border-rose-200 text-rose-700 text-sm">
+            <ul class="list-disc list-inside">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+        </div>
+    @endif
+
+    <div class="mb-6 flex flex-wrap gap-2">
+        <a href="{{ route('vendor.earnings.index') }}" class="px-4 py-2 rounded-xl text-xs font-bold bg-vendor-600 text-white">Income reports</a>
+        <a href="{{ route('vendor.payouts.index') }}" class="px-4 py-2 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">Payout history</a>
+    </div>
+
     <div class="mb-10 flex flex-col md:flex-row justify-between items-center group transition duration-300">
         <div class="z-10 text-center md:text-left">
             <h2 class="text-4xl font-extrabold text-slate-900 dark:text-white font-heading tracking-tighter">Income Reports & Yield</h2>
@@ -20,7 +34,7 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
         
         <div class="bg-indigo-600 rounded-[35px] p-8 text-white shadow-2xl shadow-indigo-600/30 relative overflow-hidden group">
-            <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
+            <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none group-hover:scale-150 transition-transform duration-700"></div>
             <p class="text-[10px] font-black uppercase tracking-[0.25em] text-indigo-200 mb-2 font-heading">Accumulated Yield</p>
             <div class="flex items-baseline mb-1">
                  <span class="text-lg font-bold text-indigo-300 mr-1.5">৳</span>
@@ -61,7 +75,7 @@
                     <p class="text-xs font-bold text-amber-600 uppercase tracking-widest">Pending Settlement</p>
                  </div>
                  @if($summary['unpaid'] > 0)
-                    <a href="#" class="btn-vendor text-[10px] font-bold uppercase tracking-widest bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-xl transition-all shadow-lg shadow-amber-500/30">Request Payout</a>
+                    <a href="{{ route('vendor.payouts.index') }}" class="btn-vendor text-[10px] font-bold uppercase tracking-widest bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-xl transition-all shadow-lg shadow-amber-500/30">View Payouts</a>
                  @endif
             </div>
         </div>
@@ -76,10 +90,10 @@
                 Detailed Settlement Ledger
             </h3>
             
-            <div class="flex items-center bg-slate-50 dark:bg-slate-800 p-1 rounded-2xl border border-slate-100 dark:border-slate-700">
-                 <a href="{{ route('vendor.earnings.index') }}" class="px-6 py-2.5 rounded-xl text-xs font-bold transition-all {{ !request('is_paid') ? 'bg-white dark:bg-slate-700 shadow-sm text-vendor-600 dark:text-white' : 'text-slate-400 hover:text-slate-600' }}">All Settlements</a>
-                 <a href="{{ route('vendor.earnings.index', ['is_paid' => 'false']) }}" class="px-6 py-2.5 rounded-xl text-xs font-bold transition-all {{ request('is_paid') === 'false' ? 'bg-white dark:bg-slate-700 shadow-sm text-vendor-600 dark:text-white' : 'text-slate-400 hover:text-slate-600' }}">Awaiting Withdrawal</a>
-                 <a href="{{ route('vendor.earnings.index', ['is_paid' => 'true']) }}" class="px-6 py-2.5 rounded-xl text-xs font-bold transition-all {{ request('is_paid') === 'true' ? 'bg-white dark:bg-slate-700 shadow-sm text-vendor-600 dark:text-white' : 'text-slate-400 hover:text-slate-600' }}">Disbursed Funds</a>
+            <div class="flex flex-wrap items-center bg-slate-50 dark:bg-slate-800 p-1 rounded-2xl border border-slate-100 dark:border-slate-700 gap-1">
+                 <a href="{{ route('vendor.earnings.index') }}" class="px-6 py-2.5 rounded-xl text-xs font-bold transition-all {{ ! request()->filled('is_paid') ? 'bg-white dark:bg-slate-700 shadow-sm text-vendor-600 dark:text-white' : 'text-slate-400 hover:text-slate-600' }}">All</a>
+                 <a href="{{ route('vendor.earnings.index', ['is_paid' => 0]) }}" class="px-6 py-2.5 rounded-xl text-xs font-bold transition-all {{ request()->filled('is_paid') && ! request()->boolean('is_paid') ? 'bg-white dark:bg-slate-700 shadow-sm text-vendor-600 dark:text-white' : 'text-slate-400 hover:text-slate-600' }}">Unpaid</a>
+                 <a href="{{ route('vendor.earnings.index', ['is_paid' => 1]) }}" class="px-6 py-2.5 rounded-xl text-xs font-bold transition-all {{ request()->boolean('is_paid') ? 'bg-white dark:bg-slate-700 shadow-sm text-vendor-600 dark:text-white' : 'text-slate-400 hover:text-slate-600' }}">Paid</a>
             </div>
         </div>
 
@@ -103,16 +117,16 @@
                                 <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">{{ $earning->created_at->format('M d, Y') }}</span>
                             </td>
                             <td class="px-4 py-6">
-                                <span class="text-sm font-black font-mono text-slate-900 dark:text-white tracking-widest">{{ $earning->order->order_number ?? 'ORD-00000' }}</span>
+                                    <span class="text-sm font-black font-mono text-slate-900 dark:text-white tracking-widest">{{ optional($earning->order)->order_number ?? '—' }}</span>
                             </td>
                             <td class="px-4 py-6">
                                 <div class="flex flex-col">
-                                    <span class="text-sm font-bold text-slate-700 dark:text-slate-300 leading-tight mb-0.5">{{ $earning->orderItem->product_name ?? 'Digital Item' }}</span>
-                                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">{{ $earning->orderItem->quantity ?? 1 }} Unit Dispatched</span>
+                                    <span class="text-sm font-bold text-slate-700 dark:text-slate-300 leading-tight mb-0.5">{{ optional($earning->orderItem)->product_name ?? '—' }}</span>
+                                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">{{ optional($earning->orderItem)->quantity ?? '—' }} units</span>
                                 </div>
                             </td>
                             <td class="px-4 py-6">
-                                <span class="text-sm font-bold text-slate-400">৳{{ number_format($earning->total_amount, 2) }}</span>
+                                <span class="text-sm font-bold text-slate-400">৳{{ number_format($earning->order_item_total, 2) }}</span>
                             </td>
                             <td class="px-4 py-6">
                                 <span class="text-sm font-bold text-rose-400">৳{{ number_format($earning->commission_amount, 2) }}</span>

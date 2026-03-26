@@ -10,17 +10,20 @@ class ReviewController extends Controller
 {
     protected function vendorProductReview(Review $review): void
     {
-        $vendorId = auth()->user()->vendor?->id;
+        $vendorId = auth()->user()?->vendor?->id;
         abort_unless($vendorId && (int) $review->product?->vendor_id === (int) $vendorId, 404);
     }
 
     public function index(Request $request)
     {
-        $vendorId = auth()->user()->vendor->id;
+        $vendor = auth()->user()?->vendor;
+        abort_unless($vendor, 403, 'Vendor profile not found.');
+
+        $vendorId = $vendor->id;
         $status   = $request->get('status', 'pending');
 
         $query = Review::with(['user', 'product'])
-            ->whereHas('product', fn ($q) => $q->where('vendor_id', $vendorId))
+            ->whereRelation('product', 'vendor_id', $vendorId)
             ->latest();
 
         if ($status !== 'all' && in_array($status, ['pending', 'approved', 'rejected'], true)) {
@@ -30,16 +33,16 @@ class ReviewController extends Controller
         }
 
         if ($search = trim((string) $request->get('search'))) {
-            $query->where(function ($q) use ($search) {
+            $query->where(function ($q) use ($search, $vendorId) {
                 $q->where('comment', 'like', "%{$search}%")
                     ->orWhere('title', 'like', "%{$search}%")
-                    ->orWhereHas('product', fn ($pq) => $pq->where('name', 'like', "%{$search}%"));
+                    ->orWhereHas('product', fn ($pq) => $pq->where('vendor_id', $vendorId)->where('name', 'like', "%{$search}%"));
             });
         }
 
         $reviews = $query->paginate(20)->withQueryString();
 
-        $vendorReviewBase = Review::whereHas('product', fn ($q) => $q->where('vendor_id', $vendorId));
+        $vendorReviewBase = Review::whereRelation('product', 'vendor_id', $vendorId);
         $aggregates       = (clone $vendorReviewBase)
             ->selectRaw('status, COUNT(*) as c')
             ->groupBy('status')

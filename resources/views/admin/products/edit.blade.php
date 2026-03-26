@@ -384,6 +384,10 @@ function productEditor() {
         init() {
             var self = this;
             this.$nextTick(function(){ self.dirty = false; });
+            var form = this.$el.closest('form');
+            if (form) {
+                form.addEventListener('submit', function () { self.syncNativeInput(); });
+            }
         },
 
         get slug() {
@@ -439,8 +443,9 @@ function productEditor() {
         },
 
         onFilesSelected(e) {
-            this.addFiles(e.target.files);
+            var fl = Array.from(e.target.files);
             e.target.value = '';
+            this.addFiles(fl);
         },
 
         onDropFiles(e) {
@@ -453,13 +458,15 @@ function productEditor() {
                 if (!f.type.startsWith('image/')) return;
                 var id = 'new-' + (++self.fileCounter);
                 var sz = f.size < 1048576 ? (f.size/1024).toFixed(0) + ' KB' : (f.size/1048576).toFixed(1) + ' MB';
+                var idx = self.newFiles.length;
+                self.newFiles.push({id: id, name: f.name, file: f, preview: '', size: sz});
                 var reader = new FileReader();
                 reader.onload = function(ev) {
-                    self.newFiles.push({id: id, name: f.name, file: f, preview: ev.target.result, size: sz});
-                    self.syncNativeInput();
+                    self.newFiles[idx].preview = ev.target.result;
                 };
                 reader.readAsDataURL(f);
             });
+            this.syncNativeInput();
         },
 
         removeNewFile(idx) {

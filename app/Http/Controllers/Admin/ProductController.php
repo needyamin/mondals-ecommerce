@@ -2,18 +2,20 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Models\{Product, ProductImage, Vendor, Brand, Category, Attribute};
-use App\Support\MediaDisks;
+use App\Models\{Product, Vendor, Brand, Category, Attribute};
+use App\Services\ProductGalleryService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use App\Traits\ExportsToCsv;
 
 class ProductController extends BaseCrudController
 {
     use ExportsToCsv;
+
+    public function __construct(
+        private readonly ProductGalleryService $gallery
+    ) {}
 
     protected string $model = Product::class;
     protected string $viewPrefix = 'admin.products';
@@ -58,7 +60,7 @@ class ProductController extends BaseCrudController
             'meta_keywords'     => $request->input('meta_keywords'),
         ]);
 
-        $errors = $this->handleImages($item, $request);
+        $errors = $this->gallery->syncGallery($item, $request, false);
 
         $msg = 'Product updated successfully.';
         if ($errors) {
@@ -66,82 +68,6 @@ class ProductController extends BaseCrudController
         }
 
         return redirect()->route('admin.products.edit', $item->id)->with('success', $msg);
-    }
-
-    /** @return string[] error messages */
-    private function handleImages(Product $item, Request $request): array
-    {
-        $errors = [];
-        $disk = MediaDisks::productDisk() ?: 'public';
-
-        foreach ($request->input('remove_images', []) as $imgId) {
-            $img = $item->images()->find($imgId);
-            if ($img) {
-                try {
-                    if (filled($img->image)) {
-                        Storage::disk($disk)->delete($img->image);
-                    }
-                } catch (\Throwable) {}
-                $img->delete();
-            }
-        }
-
-        if ($request->filled('image_order')) {
-            foreach ($request->input('image_order') as $i => $imgId) {
-                $item->images()->where('id', $imgId)->update(['sort_order' => (int) $i]);
-            }
-        }
-
-        $files = $request->file('images');
-        if ($files) {
-            if (!is_array($files)) {
-                $files = [$files];
-            }
-
-            $destDir = storage_path('app/public/products');
-            File::ensureDirectoryExists($destDir);
-
-            $order = (int) $item->images()->max('sort_order');
-            $noPrimary = !$item->images()->where('is_primary', true)->exists();
-
-            foreach ($files as $idx => $file) {
-                if (!$file instanceof \Illuminate\Http\UploadedFile || !$file->isValid()) {
-                    $errors[] = "File #{$idx} invalid or missing";
-                    continue;
-                }
-
-                try {
-                    $ext = $file->guessExtension() ?: 'jpg';
-                    $name = Str::random(40) . '.' . $ext;
-                    $file->move($destDir, $name);
-                    $path = 'products/' . $name;
-                } catch (\Throwable $e) {
-                    $errors[] = "File #{$idx}: " . $e->getMessage();
-                    continue;
-                }
-
-                $order++;
-                $isPrimary = $noPrimary && $idx === 0;
-                ProductImage::create([
-                    'product_id' => $item->id,
-                    'image'      => $path,
-                    'sort_order' => $order,
-                    'is_primary' => $isPrimary,
-                ]);
-                if ($isPrimary) $noPrimary = false;
-            }
-        }
-
-        if ($request->filled('set_primary')) {
-            $item->images()->update(['is_primary' => false]);
-            $item->images()->where('id', $request->input('set_primary'))->update(['is_primary' => true]);
-        }
-
-        if ($item->images()->count() && !$item->images()->where('is_primary', true)->exists()) {
-            $item->images()->orderBy('sort_order')->first()?->update(['is_primary' => true]);
-        }
-
-        return $errors;
     }
 
     private function allValidationRules(?Product $item = null): array
@@ -205,7 +131,7 @@ class ProductController extends BaseCrudController
 
     protected function afterSave(Model $item, Request $request): void
     {
-        $this->handleImages($item, $request);
+        $this->gallery->syncGallery($item, $request, $item->wasRecentlyCreated);
     }
 
     protected function applyFilters($query, Request $request)

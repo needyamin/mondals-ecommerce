@@ -29,7 +29,7 @@ class CheckoutController extends Controller
             return redirect()->route('cart')->with('error', 'Your cart is empty. Add items before checking out.');
         }
 
-        $subtotal = $cart->items->sum(fn($item) => $item->price * $item->quantity);
+        $subtotal = cart_subtotal_from_items($cart->items);
         $discountAmount = 0.0;
         $freeShippingCoupon = false;
         if ($cart->coupon && $cart->coupon->isValid()) {
@@ -99,7 +99,7 @@ class CheckoutController extends Controller
         }
 
         try {
-            $subtotal = $cart->items->sum(fn($i) => $i->price * $i->quantity);
+            $subtotal = cart_subtotal_from_items($cart->items);
 
             $shippingCost = $this->resolveShippingCost($request->shipping_method, $request->shipping_city);
 
@@ -115,7 +115,7 @@ class CheckoutController extends Controller
                 $appliedCoupon = null;
             }
 
-            $total = round(max(0, $subtotal - $discountAmount) + $shippingCost, 2);
+            $total = order_total_simple($subtotal, $discountAmount, $shippingCost);
 
             // Build order
             $order = Order::create([
@@ -164,10 +164,10 @@ class CheckoutController extends Controller
                     'sku'                   => $cartItem->product->sku,
                     'price'                 => $cartItem->price,
                     'quantity'              => $cartItem->quantity,
-                    'subtotal'              => $cartItem->price * $cartItem->quantity,
+                    'subtotal'              => line_total((float) $cartItem->price, (int) $cartItem->quantity),
                     'discount_amount'       => 0,
                     'tax_amount'            => 0,
-                    'total'                 => $cartItem->price * $cartItem->quantity,
+                    'total'                 => line_total((float) $cartItem->price, (int) $cartItem->quantity),
                     'options'               => $cartItem->productVariant?->attributes,
                 ]);
             }

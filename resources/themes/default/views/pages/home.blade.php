@@ -13,6 +13,13 @@
         </div>
     </div>
 @endif
+@if(session('info'))
+    <div class="fixed top-24 left-1/2 -translate-x-1/2 z-50 max-w-lg w-full px-4 animate-slide-up">
+        <div class="p-4 rounded-xl bg-sky-50 dark:bg-sky-900/90 border border-sky-200 dark:border-sky-800 text-sky-800 dark:text-sky-200 flex items-center shadow-xl backdrop-blur-md" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 6000)" x-transition>
+            <span class="font-medium">{{ session('info') }}</span>
+        </div>
+    </div>
+@endif
 
 <!-- Hero Section -->
 <section class="relative overflow-hidden w-full h-[80vh] min-h-[600px] flex items-center justify-center bg-darkbg">
@@ -35,12 +42,15 @@
         <p class="mt-4 max-w-2xl mx-auto text-xl text-slate-300 mb-10 leading-relaxed font-light">
             Elevate your lifestyle with premium electronics, cutting-edge gadgets, and exclusive fashion straight from top vendors across Bangladesh.
         </p>
-        <div class="flex justify-center space-x-6">
+        <div class="flex flex-wrap justify-center gap-4">
             <a href="{{ route('products') }}" class="btn-primary py-4 px-10 text-lg shadow-[0_0_40px_rgba(79,70,229,0.5)]">
                 Shop Now
             </a>
             <a href="{{ route('stores.index') }}" class="btn-outline border-white/30 text-white hover:bg-white hover:text-slate-900 backdrop-blur-sm py-4 px-10 text-lg">
                 Explore Vendors
+            </a>
+            <a href="{{ route('register.vendor') }}" class="btn-outline border-white/30 text-white hover:bg-white hover:text-slate-900 backdrop-blur-sm py-4 px-10 text-lg">
+                Sell with us
             </a>
         </div>
     </div>

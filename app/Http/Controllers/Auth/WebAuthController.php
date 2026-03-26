@@ -54,9 +54,17 @@ class WebAuthController extends Controller
             $user = Auth::user();
             if ($user->hasRole('admin')) {
                 return redirect()->intended(route('admin.dashboard'));
-            } elseif ($user->hasRole('vendor')) {
-                return redirect()->intended(route('vendor.dashboard'));
-            } elseif ($user->hasRole('customer')) {
+            }
+            if ($user->hasRole('vendor')) {
+                $vendor = $user->vendor;
+                if ($vendor && $vendor->status === 'approved') {
+                    return redirect()->intended(route('vendor.dashboard'));
+                }
+
+                return redirect()->intended(route('home'))
+                    ->with('info', 'Your seller account is pending approval. We will notify you when it is active.');
+            }
+            if ($user->hasRole('customer')) {
                 return redirect()->intended(route('customer.dashboard'));
             }
 

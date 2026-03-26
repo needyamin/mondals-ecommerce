@@ -33,6 +33,8 @@ Route::get('/login', [\App\Http\Controllers\Auth\WebAuthController::class, 'show
 Route::post('/login', [\App\Http\Controllers\Auth\WebAuthController::class, 'login']);
 Route::get('/register', [\App\Http\Controllers\Auth\WebAuthController::class, 'showRegistrationForm'])->name('register');
 Route::post('/register', [\App\Http\Controllers\Auth\WebAuthController::class, 'register']);
+Route::get('/register/vendor', [\App\Http\Controllers\Auth\VendorSignupController::class, 'create'])->name('register.vendor');
+Route::post('/register/vendor', [\App\Http\Controllers\Auth\VendorSignupController::class, 'store']);
 
 // Logout Web
 Route::post('/logout', [\App\Http\Controllers\Auth\WebAuthController::class, 'logout'])->name('logout');
@@ -144,8 +146,10 @@ Route::middleware(['auth', 'vendor'])->prefix('vendor')->name('vendor.')->group(
     Route::resource('products', \App\Http\Controllers\Vendor\ProductController::class)->except(['show']);
     Route::get('/orders', [\App\Http\Controllers\Vendor\OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{id}', [\App\Http\Controllers\Vendor\OrderController::class, 'show'])->name('orders.show');
+    Route::post('/orders/{id}/advance', [\App\Http\Controllers\Vendor\OrderController::class, 'advance'])->name('orders.advance');
     Route::get('/earnings', [\App\Http\Controllers\Vendor\EarningController::class, 'index'])->name('earnings.index');
     Route::get('/payouts', [\App\Http\Controllers\Vendor\EarningController::class, 'payouts'])->name('payouts.index');
+    Route::get('/payouts/{id}/receipt', [\App\Http\Controllers\Vendor\EarningController::class, 'payoutReceipt'])->name('payouts.receipt');
     Route::get('/settings', [\App\Http\Controllers\Vendor\SettingsController::class, 'index'])->name('settings.index');
     Route::post('/settings', [\App\Http\Controllers\Vendor\SettingsController::class, 'update'])->name('settings.update');
 });

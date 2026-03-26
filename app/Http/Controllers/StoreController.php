@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\{Plugin, Product, Vendor};
-use App\Services\ProductService;
 use Illuminate\Http\Request;
 
 class StoreController extends Controller
@@ -13,11 +12,15 @@ class StoreController extends Controller
      */
     public function show(string $slug)
     {
-        $vendor = Vendor::where('slug', $slug)->approved()->firstOrFail();
-        
+        $vendorQuery = Vendor::where('slug', $slug)->approved();
+        if (Plugin::isActiveSlug('product-reviews')) {
+            $vendorQuery->with(['products.reviews']);
+        }
+        $vendor = $vendorQuery->firstOrFail();
+
         $products = Product::published()
             ->byVendor($vendor->id)
-            ->with(['images' => fn($q) => $q->primary(), 'brand'])
+            ->with(['images' => fn ($q) => $q->primary(), 'brand'])
             ->sorted(request('sort'), '-created_at')
             ->paginate(12)
             ->withQueryString();
@@ -28,14 +31,34 @@ class StoreController extends Controller
     /**
      * List all vendor stores.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $vendors = Vendor::approved()
-            ->withCount('products');
+        $filters = array_filter(
+            $request->only(['search']),
+            fn ($v) => $v !== null && $v !== ''
+        );
+
+        $query = Vendor::approved()->withCount([
+            'products as published_products_count' => fn ($q) => $q->published(),
+        ]);
+
         if (Plugin::isActiveSlug('product-reviews')) {
-            $vendors->with(['products.reviews']);
+            $query->with([
+                'products' => fn ($q) => $q->published()->with('reviews:id,product_id,rating'),
+            ]);
         }
-        $vendors = $vendors->latest()->paginate(12);
+
+        $query->filter($filters);
+
+        match ($request->input('sort', 'newest')) {
+            'name' => $query->orderBy('store_name'),
+            'name_desc' => $query->orderByDesc('store_name'),
+            'products' => $query->orderByDesc('published_products_count'),
+            'oldest' => $query->oldest(),
+            default => $query->latest(),
+        };
+
+        $vendors = $query->paginate(12)->withQueryString();
 
         return view('pages.stores', compact('vendors'));
     }
