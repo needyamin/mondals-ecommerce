@@ -77,6 +77,8 @@ Use **`microk8s kubectl`** instead of **`kubectl`** in the commands above (or `a
 ```bash
 curl -sfL https://get.k3s.io | sh -
 ```
+If **`kubectl cluster-info`** fails but **`sudo k3s kubectl get nodes`** works, **`scripts/k8s-up.sh`** will use **`sudo k3s kubectl`** automatically.
+
 By default **`/etc/rancher/k3s/k3s.yaml`** is root-only. Use a copy you own (fixes *permission denied* / *Unable to read k3s.yaml*):
 
 ```bash
