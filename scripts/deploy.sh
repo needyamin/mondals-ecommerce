@@ -67,6 +67,22 @@ until docker exec "$DB_CONTAINER" mysqladmin ping -h "127.0.0.1" -u root -proot_
 done
 echo "✅ Database is ready!"
 
+# ── 5b. Wait until app container accepts exec (avoids "restarting" race)
+echo "⏳ Waiting for app container..."
+APP_RETRIES=0
+until docker exec "$APP_CONTAINER" true 2>/dev/null; do
+    APP_RETRIES=$((APP_RETRIES + 1))
+    STATUS=$(docker inspect -f '{{.State.Status}}' "$APP_CONTAINER" 2>/dev/null || echo "unknown")
+    if [ "$APP_RETRIES" -ge 60 ]; then
+        echo "❌ App container not ready after 60 attempts (status: $STATUS)"
+        docker logs "$APP_CONTAINER" --tail 80
+        exit 1
+    fi
+    echo "   Waiting for app... ($APP_RETRIES/60, status: $STATUS)"
+    sleep 2
+done
+echo "✅ App container is ready!"
+
 # ── 6. Laravel Setup & Permissions ──
 echo "🔐 Fixing project permissions (Direct Public Storage)..."
 # 1. Migrate any legacy files from storage to public if they exist
