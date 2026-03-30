@@ -22,7 +22,7 @@ spec:
               until nc -z mondals-db-service 3306; do echo waiting for mysql; sleep 2; done
       containers:
         - name: migrate
-          image: your-docker-registry/mondals-app:latest
+          image: mondals-app:latest
           imagePullPolicy: IfNotPresent
           command: ["php", "artisan", "migrate", "--force"]
           envFrom:

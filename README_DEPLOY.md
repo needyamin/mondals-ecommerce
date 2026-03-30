@@ -34,7 +34,17 @@ This is the **fastest** and most reliable way to host on a single Ubuntu server.
 
 ## 2️⃣ Scalable deployment (Kubernetes)
 
-Edit **`k8s/config-secret.yaml`** (real **`APP_KEY`**, **`DB_PASSWORD`** if needed) and **`k8s/app.yaml`** / **`migrate-job.yaml`** (**`image:`**).
+Edit **`k8s/config-secret.yaml`**: set a real **`APP_KEY`** (not the `CHANGE_ME` placeholder) and **`DB_PASSWORD`** if needed.
+
+**Image:** manifests use **`mondals-app:latest`**. On the K3s node, load it into containerd once (or push to your registry and change the image name):
+
+```bash
+cd /path/to/mondals-ecommerce
+docker build -t mondals-app:latest .
+docker save mondals-app:latest | sudo k3s ctr images import -
+```
+
+Or **`MONDALS_K8S_BUILD_IMAGE=1 ./scripts/k8s-up.sh`** to build and import before apply.
 
 **One command** (from repo root or `scripts/`: finds repo root automatically):
 

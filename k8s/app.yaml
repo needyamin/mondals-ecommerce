@@ -30,8 +30,9 @@ spec:
               until nc -z mondals-db-service 3306; do echo waiting for mysql; sleep 2; done
       containers:
         - name: app
-          # Build/push from repo Dockerfile, then set your registry image here
-          image: your-docker-registry/mondals-app:latest
+          # K3s single-node: docker build -t mondals-app:latest . && docker save mondals-app:latest | sudo k3s ctr images import -
+          # Registry: change to your/repo:tag and use imagePullPolicy: Always
+          image: mondals-app:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80

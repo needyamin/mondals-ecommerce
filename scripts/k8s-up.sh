@@ -49,6 +49,19 @@ if ! kubectl cluster-info >/dev/null 2>&1; then
   exit 1
 fi
 
+if [ "${MONDALS_K8S_BUILD_IMAGE:-}" = "1" ]; then
+  echo "🐳 docker build -t mondals-app:latest + import into cluster..."
+  docker build -t mondals-app:latest "$ROOT"
+  if sudo k3s ctr version >/dev/null 2>&1; then
+    docker save mondals-app:latest | sudo k3s ctr images import -
+  elif command -v microk8s >/dev/null 2>&1; then
+    docker save mondals-app:latest | microk8s ctr images import -
+  else
+    echo "❌ No k3s/microk8s ctr; import manually after docker save."
+    exit 1
+  fi
+fi
+
 echo "📦 kubectl apply -k k8s/"
 kubectl apply -k k8s/
 
@@ -59,7 +72,23 @@ if [ "$SKIP_MIGRATE" = false ]; then
   echo "🛠️  Running migrations (Job)..."
   kubectl delete job mondals-migrate -n "$NS" --ignore-not-found=true
   kubectl apply -f k8s/migrate-job.yaml
-  kubectl wait --for=condition=complete "job/mondals-migrate" -n "$NS" --timeout=300s
+  JOB_WAIT=600
+  if ! kubectl wait --for=condition=complete "job/mondals-migrate" -n "$NS" --timeout="${JOB_WAIT}s"; then
+    echo ""
+    echo "❌ Migrate job did not finish. Check image + APP_KEY in k8s/config-secret.yaml"
+    echo "   Pods:"
+    kubectl get pods -n "$NS" -l job-name=mondals-migrate -o wide 2>/dev/null || true
+    echo "   Logs (migrate):"
+    kubectl logs -n "$NS" -l job-name=mondals-migrate -c migrate --tail=100 2>/dev/null || true
+    echo "   Logs (init):"
+    kubectl logs -n "$NS" -l job-name=mondals-migrate -c wait-for-mysql --tail=50 2>/dev/null || true
+    echo "   Describe job:"
+    kubectl describe job mondals-migrate -n "$NS" | tail -35
+    echo ""
+    echo "   Load image on K3s: docker build -t mondals-app:latest . && docker save mondals-app:latest | sudo k3s ctr images import -"
+    echo "   Or one-shot: MONDALS_K8S_BUILD_IMAGE=1 ./scripts/k8s-up.sh"
+    exit 1
+  fi
 else
   echo "⏭️  Skipping migrate job (--skip-migrate)"
 fi
