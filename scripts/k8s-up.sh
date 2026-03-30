@@ -25,9 +25,27 @@ if ! command -v kubectl >/dev/null 2>&1; then
   exit 1
 fi
 
+k3s_admin="/etc/rancher/k3s/k3s.yaml"
+kube_conf="${HOME}/.kube/config"
+
 if ! kubectl cluster-info >/dev/null 2>&1; then
-  echo "❌ Cannot reach cluster. Fix kubeconfig, e.g.:"
-  echo "   mkdir -p ~/.kube && sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/config && sudo chown \"\$USER:\$USER\" ~/.kube/config"
+  if [ -f "$k3s_admin" ] && [ "${MONDALS_K8S_NO_KUBECONFIG_SYNC:-}" != "1" ]; then
+    echo "🔑 Syncing K3s admin kubeconfig → $kube_conf (sudo)..."
+    mkdir -p "${HOME}/.kube"
+    sudo cp -f "$k3s_admin" "$kube_conf"
+    sudo chown "$(id -u):$(id -g)" "$kube_conf"
+  fi
+fi
+
+if ! kubectl cluster-info >/dev/null 2>&1; then
+  echo "❌ Cannot reach cluster."
+  if [ -f "$k3s_admin" ]; then
+    echo "   sudo cp -f $k3s_admin $kube_conf && sudo chown \"\$USER:\$USER\" $kube_conf"
+    echo "   (skip auto-sync: MONDALS_K8S_NO_KUBECONFIG_SYNC=1 ./scripts/k8s-up.sh)"
+  fi
+  if command -v microk8s >/dev/null 2>&1; then
+    echo "   MicroK8s: microk8s kubectl apply -k k8s/"
+  fi
   exit 1
 fi
 
