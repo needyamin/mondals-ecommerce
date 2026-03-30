@@ -85,17 +85,17 @@ if [ -z "$APP_KEY" ] || [ "$APP_KEY" = "" ]; then
     docker exec "$APP_CONTAINER" php artisan key:generate --force
 fi
 
-# ── 8. Run Laravel caching & migrations ──
+# ── 8. Migrations first (database cache/session tables must exist before cache:clear)
+echo "🛠️  Running database migrations..."
+docker exec "$APP_CONTAINER" php artisan migrate --force
+
+# ── 9. Laravel cache (after DB tables exist when CACHE_STORE=database)
 echo "⚡ Refreshing application cache..."
 docker exec "$APP_CONTAINER" php artisan cache:clear
 docker exec "$APP_CONTAINER" php artisan config:clear
 docker exec "$APP_CONTAINER" php artisan config:cache
 docker exec "$APP_CONTAINER" php artisan route:cache
 docker exec "$APP_CONTAINER" php artisan view:cache
-
-
-echo "🛠️  Running database migrations..."
-docker exec "$APP_CONTAINER" php artisan migrate --force
 
 # ── 10. Quick health check ──
 echo "🔍 Verifying application..."
