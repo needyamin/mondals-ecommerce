@@ -27,7 +27,7 @@ Multi-vendor e-commerce with **customers**, **vendors**, **staff**, and **admins
 ## Install
 
 ```bash
-git clone <your-repo-url> && cd MondalsEcommerce
+git clone https://github.com/needyamin/mondals-ecommerce.git && cd MondalsEcommerce
 
 composer install && npm install && npm run build
 
