@@ -3,8 +3,10 @@ kind: StatefulSet
 metadata:
   name: mondals-db
   namespace: mondals-ecommerce
+  labels:
+    app.kubernetes.io/name: mondals-db
 spec:
-  serviceName: "mondals-db-service"
+  serviceName: mondals-db-service
   replicas: 1
   selector:
     matchLabels:
@@ -15,39 +17,71 @@ spec:
         app: mondals-db
     spec:
       containers:
-      - name: mysql
-        image: mysql:8.0
-        ports:
-        - containerPort: 3306
-        env:
-        - name: MYSQL_ROOT_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: mondals-secrets
-              key: DB_PASSWORD
-        - name: MYSQL_DATABASE
-          value: "mondals_ecommerce"
-        volumeMounts:
-        - name: db-storage
-          mountPath: /var/lib/mysql
+        - name: mysql
+          image: mysql:8.0
+          ports:
+            - containerPort: 3306
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mondals-secrets
+                  key: DB_PASSWORD
+            - name: MYSQL_DATABASE
+              value: "mondals_ecommerce"
+            - name: MYSQL_CHARSET
+              value: utf8mb4
+            - name: MYSQL_COLLATION
+              value: utf8mb4_unicode_ci
+          volumeMounts:
+            - name: db-storage
+              mountPath: /var/lib/mysql
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - mysqladmin ping -h 127.0.0.1 -u root -p"$MYSQL_ROOT_PASSWORD" --silent
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - mysqladmin ping -h 127.0.0.1 -u root -p"$MYSQL_ROOT_PASSWORD" --silent
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 5
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "1Gi"
   volumeClaimTemplates:
-  - metadata:
-      name: db-storage
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      resources:
-        requests:
-          storage: 10Gi
+    - metadata:
+        name: db-storage
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 10Gi
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: mondals-db-service
   namespace: mondals-ecommerce
+  labels:
+    app.kubernetes.io/name: mondals-db
 spec:
   clusterIP: None
   selector:
     app: mondals-db
   ports:
-  - port: 3306
-    targetPort: 3306
+    - port: 3306
+      targetPort: 3306
+      name: mysql

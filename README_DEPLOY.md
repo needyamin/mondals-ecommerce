@@ -32,26 +32,52 @@ This is the **fastest** and most reliable way to host on a single Ubuntu server.
 
 ---
 
-## 2️⃣ Scalable Deployment (MicroK8s / K3s)
-If you prefer the **Kubernetes (K8s)** manifests I've created:
+## 2️⃣ Scalable deployment (Kubernetes)
 
-1. Install a lightweight K8s on your Ubuntu server:
-   ```bash
-   sudo snap install microk8s --classic
-   sudo usermod -aG microk8s $USER
-   # Logout / Login
-   microk8s status --wait-ready
-   microk8s enable dns storage ingress
-   ```
-2. Apply the Mondal manifests:
-   ```bash
-   microk8s kubectl apply -f k8s/db.yaml
-   microk8s kubectl apply -f k8s/deployment.yaml
-   ```
-3. Monitor your pods:
-   ```bash
-   microk8s kubectl get pods -n mondals-ecommerce
-   ```
+Edit **`k8s/config-secret.yaml`** (real **`APP_KEY`**, **`DB_PASSWORD`** if needed) and **`k8s/app.yaml`** / **`migrate-job.yaml`** (**`image:`**).
+
+**One command** (from repo root or `scripts/`: finds repo root automatically):
+
+```bash
+chmod +x scripts/k8s-up.sh
+./scripts/k8s-up.sh
+```
+
+This runs **`kubectl apply -k k8s/`**, waits for MySQL + migrate Job + app, then prints pod status. Infra-only refresh: **`./scripts/k8s-up.sh --skip-migrate`**.
+
+Manual steps (same as the script):
+
+```bash
+kubectl apply -k k8s/
+kubectl apply -f k8s/migrate-job.yaml   # delete job mondals-migrate first if it already ran
+kubectl get pods -n mondals-ecommerce
+```
+
+### MicroK8s
+```bash
+sudo snap install microk8s --classic
+sudo usermod -aG microk8s $USER
+# Log out and back in
+microk8s status --wait-ready
+microk8s enable dns storage ingress
+```
+Use **`microk8s kubectl`** instead of **`kubectl`** in the commands above (or `alias kubectl=microk8s kubectl`).
+
+### K3s
+```bash
+curl -sfL https://get.k3s.io | sh -
+```
+By default **`/etc/rancher/k3s/k3s.yaml`** is root-only. Use a copy you own (fixes *permission denied* / *Unable to read k3s.yaml*):
+
+```bash
+mkdir -p ~/.kube
+sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/config
+sudo chown "$USER:$USER" ~/.kube/config
+```
+
+Optional (new installs): allow group read on the server config — install with  
+`curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server --write-kubeconfig-mode 644" sh -`  
+or add your user to a group via **`--write-kubeconfig-group`** (see [K3s kubeconfig](https://docs.k3s.io/cluster-access)).
 
 ---
 
@@ -60,13 +86,13 @@ If you prefer the **Kubernetes (K8s)** manifests I've created:
 ### To Check Logs:
 ```bash
 docker compose logs -f app          # Docker Compose
-microk8s kubectl logs -f -l app=mondals-app -n mondals-ecommerce  # Kubernetes
+kubectl logs -f -l app=mondals-app -n mondals-ecommerce   # K8s (after kubeconfig fix above)
 ```
 
 ### To Enter the Container:
 ```bash
 docker exec -it mondals-app bash     # Docker Compose
-microk8s kubectl exec -it deployment/mondals-app -n mondals-ecommerce -- bash  # K8s
+kubectl exec -it deployment/mondals-app -n mondals-ecommerce -- bash   # K8s
 ```
 
 ### Force Migration:
