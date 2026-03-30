@@ -6,13 +6,12 @@ echo "🔧 Mondals E-Commerce - Container Starting..."
 # Always create storage symlink (safe to re-run)
 php artisan storage:link 2>/dev/null || true
 
-# Cache configuration, routes, and views if in production
-if [ "$APP_ENV" = "production" ]; then
-    echo "⚡ Caching Laravel configuration, routes, and views..."
-    php artisan config:cache
-    php artisan route:cache
-    php artisan view:cache
+# First deploy: empty APP_KEY makes artisan (migrate/seed) exit 1
+if [ -f /var/www/html/.env ] && ! grep -qE '^APP_KEY=.' /var/www/html/.env; then
+    php artisan key:generate --force
 fi
+
+# Caching is done in deploy.sh after migrate (not here — avoids boot failures / duplicate work)
 
 # Run database migrations if enabled
 if [ "$RUN_MIGRATIONS" = "true" ]; then
@@ -20,8 +19,10 @@ if [ "$RUN_MIGRATIONS" = "true" ]; then
     php artisan migrate --force
 fi
 
-# Run database seeder if enabled
+# Run database seeder if enabled (migrate first so empty DB does not kill the container)
 if [ "$RUN_SEEDERS" = "true" ]; then
+    echo "📦 Migrating before seed..."
+    php artisan migrate --force
     echo "🌱 Running database seeders..."
     php artisan db:seed --force
 fi

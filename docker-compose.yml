@@ -44,7 +44,7 @@ services:
       DB_USERNAME: ${DB_USERNAME:-root}
       DB_PASSWORD: ${DB_PASSWORD:-root_password}
       RUN_MIGRATIONS: ${RUN_MIGRATIONS:-false}
-      RUN_SEEDERS: ${RUN_SEEDERS:-true}
+      RUN_SEEDERS: ${RUN_SEEDERS:-false}
     depends_on:
       db:
         condition: service_healthy
@@ -63,7 +63,7 @@ services:
     volumes:
       - dbdata:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-proot_password", "--silent"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD --silent || exit 1"]
       interval: 5s
       timeout: 5s
       retries: 10

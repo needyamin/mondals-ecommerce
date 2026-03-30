@@ -38,20 +38,20 @@ App: **http://localhost:8000** · phpMyAdmin: **8088** · MySQL host: **3388**
 
 ## Ubuntu server: setup then deploy
 
-From the project root:
+Run everything from **`scripts/`** (no need to `cd` to repo root):
 
 ```bash
 cd scripts
 chmod +x setup-server.sh && ./setup-server.sh
 ```
 
-Log out and back in (Docker group). Then:
+Log out and back in (Docker group). Then still from **`scripts/`**:
 
 ```bash
-chmod +x deploy.sh && ./deploy.sh
+chmod +x up deploy.sh && ./up
 ```
 
-(`deploy.sh` expects `.env` in the repo root and uses `docker compose`.)
+**`./up`** = full Docker deploy: syncs `.env` for Compose (MySQL `db`, drivers), `git pull`, `compose up`, migrate, cache. Same as `./deploy.sh`.
 
 ---
 

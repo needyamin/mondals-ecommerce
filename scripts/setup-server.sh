@@ -4,6 +4,8 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 echo "🚀 Starting Mondal's Server Setup..."
 
 # ── 1. Update system packages ──
@@ -122,5 +124,5 @@ echo ""
 echo "  ⚠️  IMPORTANT: Log out and log back in"
 echo "     to use Docker without 'sudo'."
 echo ""
-echo "  Next step: ./scripts/deploy.sh"
+echo "  Next step (from scripts/): chmod +x up deploy.sh && ./up"
 echo "============================================"
