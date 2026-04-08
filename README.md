@@ -9,6 +9,9 @@
 </div>
 
 ---
+## Screenshots
+
+<img width="1920" height="3037" alt="Image" src="https://github.com/user-attachments/assets/067639b4-5e2a-4a5e-9a75-d3fe82e53898" />
 
 ## Local (no Docker)
 
