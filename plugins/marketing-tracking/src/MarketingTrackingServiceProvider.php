@@ -11,6 +11,6 @@ class MarketingTrackingServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'marketing-tracking');
-        $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
+        // Routes are required from routes/web.php so route:cache registers admin.marketing.*
     }
 }

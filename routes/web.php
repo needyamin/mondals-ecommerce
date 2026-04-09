@@ -157,3 +157,8 @@ Route::middleware(['auth', 'vendor'])->prefix('vendor')->name('vendor.')->group(
 // ── Public Store Pages ──
 Route::get('/stores', [\App\Http\Controllers\StoreController::class, 'index'])->name('stores.index');
 Route::get('/stores/{slug}', [\App\Http\Controllers\StoreController::class, 'show'])->name('stores.show');
+
+// Plugin admin routes (must live here so `route:cache` includes them; see MarketingTrackingServiceProvider for views)
+if (file_exists(base_path('plugins/marketing-tracking/routes/web.php'))) {
+    require base_path('plugins/marketing-tracking/routes/web.php');
+}
