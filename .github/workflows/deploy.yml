@@ -33,7 +33,7 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           
           # Use cloudflared as a ProxyCommand to connect to your tunnel
-          ssh -o "ProxyCommand=/usr/local/bin/cloudflared access ssh --hostname %h" \
+          ssh -o "ProxyCommand=/usr/bin/cloudflared access ssh --hostname %h" \
               -o "StrictHostKeyChecking=no" \
               -i ~/.ssh/id_rsa \
               $SSH_USER@$SSH_HOST \
