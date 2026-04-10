@@ -7,72 +7,39 @@ on:
 
 jobs:
   deploy:
-    name: Deploy to Ubuntu Server via SSH (Cloudflare Tunnel)
+    name: Deploy to Ubuntu Server via SSH
     runs-on: ubuntu-latest
-
     steps:
-      # 1️⃣ Checkout code
+      # 1️⃣ Checkout the code
       - name: Git Checkout
         uses: actions/checkout@v4
 
-      # 2️⃣ Install cloudflared
+      # Install only when using Cloudflare Tunnel SSH (repo Variable USE_CLOUDFLARE_SSH=true).
       - name: Install cloudflared
+        if: ${{ vars.USE_CLOUDFLARE_SSH == 'true' }}
         run: |
           wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
           sudo dpkg -i cloudflared-linux-amd64.deb
-          which cloudflared
-          cloudflared --version
 
-      # 3️⃣ Setup SSH + Cloudflare Access auth
-      - name: Setup SSH & Cloudflare Access
+      # Deploy: set USE_CLOUDFLARE_SSH=true in repo Variables if using Tunnel; else direct SSH.
+      - name: Deploy via SSH
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}
-          CF_CLIENT_ID: ${{ secrets.CF_CLIENT_ID }}
-          CF_CLIENT_SECRET: ${{ secrets.CF_CLIENT_SECRET }}
+          USE_CLOUDFLARE_SSH: ${{ vars.USE_CLOUDFLARE_SSH }}
         run: |
           mkdir -p ~/.ssh
-
-          # Private key
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-
-          # Cloudflare Access Service Token (CRITICAL FIX)
-          echo "export CLOUDFLARE_ACCESS_CLIENT_ID=$CF_CLIENT_ID" >> ~/.bashrc
-          echo "export CLOUDFLARE_ACCESS_CLIENT_SECRET=$CF_CLIENT_SECRET" >> ~/.bashrc
-
-          export CLOUDFLARE_ACCESS_CLIENT_ID=$CF_CLIENT_ID
-          export CLOUDFLARE_ACCESS_CLIENT_SECRET=$CF_CLIENT_SECRET
-
-          # SSH config with ProxyCommand
-          cat <<EOF >> ~/.ssh/config
-          Host $SSH_HOST
-            User $SSH_USER
-            IdentityFile ~/.ssh/id_rsa
-            ProxyCommand /usr/bin/cloudflared access ssh --hostname %h
-            StrictHostKeyChecking no
-          EOF
-
-      # 4️⃣ Debug (optional but useful)
-      - name: Debug Cloudflare SSH
-        env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          CF_CLIENT_ID: ${{ secrets.CF_CLIENT_ID }}
-          CF_CLIENT_SECRET: ${{ secrets.CF_CLIENT_SECRET }}
-        run: |
-          export CLOUDFLARE_ACCESS_CLIENT_ID=$CF_CLIENT_ID
-          export CLOUDFLARE_ACCESS_CLIENT_SECRET=$CF_CLIENT_SECRET
-
-          cloudflared access ssh --hostname $SSH_HOST || true
-
-      # 5️⃣ Deploy
-      - name: Deploy via SSH
-        env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-        run: |
-          ssh $SSH_HOST "
-            cd ~/mondals-ecommerce || cd /var/www/mondals-ecommerce
-            chmod +x scripts/deploy.sh
-            ./scripts/deploy.sh
-          "
+          if [ "${USE_CLOUDFLARE_SSH}" = "true" ]; then
+            CF="$(command -v cloudflared || true)"
+            if [ -z "$CF" ]; then
+              echo "USE_CLOUDFLARE_SSH=true but cloudflared is not installed"; exit 1
+            fi
+            SSH_OPTS=(-o "ProxyCommand=$CF access ssh --hostname %h" -o "StrictHostKeyChecking=no" -i ~/.ssh/id_rsa)
+          else
+            SSH_OPTS=(-o "StrictHostKeyChecking=accept-new" -i ~/.ssh/id_rsa)
+          fi
+          ssh "${SSH_OPTS[@]}" "$SSH_USER@$SSH_HOST" \
+            "cd ~/mondals-ecommerce || cd /var/www/mondals-ecommerce; chmod +x scripts/deploy.sh; ./scripts/deploy.sh"
