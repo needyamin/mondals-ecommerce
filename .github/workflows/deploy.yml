@@ -7,39 +7,30 @@ on:
 
 jobs:
   deploy:
-    name: Deploy to Ubuntu Server via SSH
+    name: Deploy via Cloudflare Tunnel SSH
     runs-on: ubuntu-latest
     steps:
-      # 1️⃣ Checkout the code
       - name: Git Checkout
         uses: actions/checkout@v4
 
-      # Install only when using Cloudflare Tunnel SSH (repo Variable USE_CLOUDFLARE_SSH=true).
+      # SSH over Cloudflare Tunnel (cloudflared access ssh). SSH_HOST = tunnel hostname from Zero Trust.
       - name: Install cloudflared
-        if: ${{ vars.USE_CLOUDFLARE_SSH == 'true' }}
         run: |
           wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
           sudo dpkg -i cloudflared-linux-amd64.deb
 
-      # Deploy: set USE_CLOUDFLARE_SSH=true in repo Variables if using Tunnel; else direct SSH.
       - name: Deploy via SSH
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}
-          USE_CLOUDFLARE_SSH: ${{ vars.USE_CLOUDFLARE_SSH }}
         run: |
           mkdir -p ~/.ssh
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          if [ "${USE_CLOUDFLARE_SSH}" = "true" ]; then
-            CF="$(command -v cloudflared || true)"
-            if [ -z "$CF" ]; then
-              echo "USE_CLOUDFLARE_SSH=true but cloudflared is not installed"; exit 1
-            fi
-            SSH_OPTS=(-o "ProxyCommand=$CF access ssh --hostname %h" -o "StrictHostKeyChecking=no" -i ~/.ssh/id_rsa)
-          else
-            SSH_OPTS=(-o "StrictHostKeyChecking=accept-new" -i ~/.ssh/id_rsa)
-          fi
-          ssh "${SSH_OPTS[@]}" "$SSH_USER@$SSH_HOST" \
-            "cd ~/mondals-ecommerce || cd /var/www/mondals-ecommerce; chmod +x scripts/deploy.sh; ./scripts/deploy.sh"
+          CF="$(command -v cloudflared)"
+          ssh -o "ProxyCommand=$CF access ssh --hostname %h" \
+              -o "StrictHostKeyChecking=no" \
+              -i ~/.ssh/id_rsa \
+              "$SSH_USER@$SSH_HOST" \
+              "cd ~/mondals-ecommerce || cd /var/www/mondals-ecommerce; chmod +x scripts/deploy.sh; ./scripts/deploy.sh"
