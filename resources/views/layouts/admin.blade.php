@@ -1,12 +1,15 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="antialiased">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="antialiased"
+      x-data="{ sidebarOpen: false, notifOpen: false, userOpen: false, darkMode: window.__adminDarkInit }"
+      x-init="$watch('darkMode', v => localStorage.setItem('adminTheme', v ? 'dark' : 'light'))"
+      :class="{ 'dark': darkMode }">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', 'Admin Panel') | Mondals Ecommerce</title>
-    
-    <!-- Alpine CSS & JS -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>[x-cloak]{display:none!important}</style>
+    <!-- Alpine JS -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script>
@@ -15,12 +18,10 @@
         } else {
             document.documentElement.classList.remove('dark')
         }
+        window.__adminDarkInit = document.documentElement.classList.contains('dark')
     </script>
 </head>
-<body x-data="{ sidebarOpen: false, darkMode: localStorage.getItem('adminTheme') === 'dark' }"
-      x-init="$watch('darkMode', val => localStorage.setItem('adminTheme', val ? 'dark' : 'light'))"
-      :class="{ 'dark': darkMode }" 
-      class="flex h-screen overflow-hidden transition-colors duration-300">
+<body class="flex h-screen overflow-hidden transition-colors duration-300">
 
     <!-- Mobile Sidebar Overlay -->
     <div x-show="sidebarOpen" x-transition.opacity class="fixed inset-0 z-20 bg-slate-900/80 backdrop-blur-sm lg:hidden" @click="sidebarOpen = false"></div>
@@ -148,34 +149,78 @@
                 <h1 class="text-2xl font-bold font-heading">@yield('title', 'Overview')</h1>
             </div>
             
-            <div class="flex items-center space-x-4 md:space-x-6">
-                <!-- Theme toggle -->
-                <button @click="darkMode = !darkMode" class="w-10 h-10 rounded-full flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+            <div class="flex items-center space-x-2 md:space-x-4">
+                <button type="button" @click="darkMode = !darkMode" class="w-10 h-10 rounded-full flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Toggle theme">
                     <svg x-show="!darkMode" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
-                    <svg x-cloak x-show="darkMode" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    <svg x-show="darkMode" x-cloak class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                 </button>
 
-                <!-- Notifications -->
-                <button class="w-10 h-10 rounded-full flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors relative">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-                    <span class="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border border-white dark:border-darkbase"></span>
-                </button>
+                <div class="relative" @click.outside="notifOpen = false">
+                    <button type="button" @click="notifOpen = !notifOpen; userOpen = false" class="w-10 h-10 rounded-full flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors relative" title="Notifications">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                        @if(($adminUnreadNotificationCount ?? 0) > 0)
+                            <span class="absolute top-1.5 right-1.5 min-w-[1.125rem] h-[1.125rem] px-0.5 flex items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white">{{ $adminUnreadNotificationCount > 9 ? '9+' : $adminUnreadNotificationCount }}</span>
+                        @endif
+                    </button>
+                    <div x-show="notifOpen" x-cloak x-transition @click.stop class="absolute right-0 mt-2 w-80 max-w-[85vw] rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-xl z-50 py-2 text-sm max-h-[min(70vh,24rem)] flex flex-col">
+                        <div class="flex items-center justify-between px-4 pb-2 border-b border-slate-100 dark:border-slate-700">
+                            <span class="font-semibold text-slate-800 dark:text-slate-100">Notifications</span>
+                            @if(($adminUnreadNotificationCount ?? 0) > 0)
+                                <form method="POST" action="{{ route('admin.notifications.read-all') }}" class="inline" @click.stop>
+                                    @csrf
+                                    <button type="submit" class="text-xs font-medium text-brand-600 dark:text-brand-400 hover:underline">Mark all read</button>
+                                </form>
+                            @endif
+                        </div>
+                        <div class="overflow-y-auto flex-1 py-1">
+                            @forelse(($adminHeaderNotifications ?? collect()) as $n)
+                                @php
+                                    $d = is_array($n->data) ? $n->data : [];
+                                @endphp
+                                <a href="{{ route('admin.notifications.visit', $n->id) }}" class="block px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700/50 {{ $n->read_at ? 'opacity-65' : '' }}">
+                                    <p class="font-medium text-slate-900 dark:text-white text-xs">{{ $d['title'] ?? 'Alert' }}</p>
+                                    @if(!empty($d['body']))
+                                        <p class="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">{{ $d['body'] }}</p>
+                                    @endif
+                                    <p class="text-[10px] text-slate-400 mt-1">{{ $n->created_at->diffForHumans() }}</p>
+                                </a>
+                            @empty
+                                <p class="px-4 py-6 text-slate-500 dark:text-slate-400 text-center text-xs">No notifications yet.</p>
+                            @endforelse
+                        </div>
+                        <a href="{{ route('admin.notifications.index') }}" class="block px-4 py-2.5 text-center text-xs font-medium text-brand-600 dark:text-brand-400 border-t border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/30">View all</a>
+                    </div>
+                </div>
 
-                <!-- Divider -->
                 <div class="h-6 w-px bg-slate-200 dark:bg-slate-700 hidden sm:block"></div>
 
-                <!-- Live View & Logout -->
-                <a href="{{ route('home') }}" target="_blank" class="hidden sm:flex items-center text-sm font-medium text-brand-600 dark:text-brand-400 hover:text-brand-800 dark:hover:text-brand-300">
-                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-                    Storefront
-                </a>
-
-                <form method="POST" action="/logout">
-                    @csrf
-                    <button type="submit" class="flex items-center justify-center w-10 h-10 rounded-full text-slate-500 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-colors" title="Logout">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                <div class="relative" @click.outside="userOpen = false">
+                    <button type="button" @click="userOpen = !userOpen; notifOpen = false" class="flex items-center gap-2 rounded-full pl-1 pr-2 py-1 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Account">
+                        <img src="{{ auth()->user()->display_avatar }}" alt="" width="32" height="32" class="h-8 w-8 shrink-0 rounded-full object-cover border border-slate-200 dark:border-slate-600">
+                        <svg class="w-4 h-4 text-slate-500 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                     </button>
-                </form>
+                    <div x-show="userOpen" x-cloak x-transition @click.stop class="absolute right-0 mt-2 w-56 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-xl z-50 py-1 text-sm">
+                        <div class="px-4 py-2 border-b border-slate-100 dark:border-slate-700">
+                            <p class="font-medium text-slate-900 dark:text-white truncate">{{ auth()->user()->name }}</p>
+                            <p class="text-xs text-slate-500 truncate">{{ auth()->user()->email }}</p>
+                        </div>
+                        <a href="{{ route('home') }}" target="_blank" class="flex items-center px-4 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                            Storefront
+                        </a>
+                        <a href="{{ route('admin.users.edit', auth()->id()) }}" class="flex items-center px-4 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                            My profile
+                        </a>
+                        <form method="POST" action="{{ route('logout') }}" class="border-t border-slate-100 dark:border-slate-700 mt-1 pt-1">
+                            @csrf
+                            <button type="submit" class="w-full text-left flex items-center px-4 py-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                                Log out
+                            </button>
+                        </form>
+                    </div>
+                </div>
             </div>
         </header>
 

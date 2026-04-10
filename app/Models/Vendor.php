@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Notifications\VendorApplicationAdminNotification;
+use App\Support\NotifyAdmins;
 use App\Traits\{HasSlug, HasStatus, Filterable, Auditable};
 use Illuminate\Database\Eloquent\{Model, SoftDeletes};
 use Illuminate\Database\Eloquent\Relations\{BelongsTo, HasMany};
@@ -88,6 +90,15 @@ class Vendor extends Model
     protected $guarded = ['id'];
     protected $casts   = ['settings' => 'array', 'approved_at' => 'datetime'];
     protected $searchable = ['store_name', 'email', 'city', 'description'];
+
+    protected static function booted(): void
+    {
+        static::created(function (Vendor $vendor) {
+            if ($vendor->status === 'pending') {
+                NotifyAdmins::send(new VendorApplicationAdminNotification($vendor));
+            }
+        });
+    }
 
     public function filterCountry($query, string $value): void
     {

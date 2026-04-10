@@ -2,9 +2,12 @@
 
 namespace Database\Seeders;
 
+use App\Models\Order;
 use App\Models\User;
+use App\Notifications\NewOrderAdminNotification;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 
 class DemoDataSeeder extends Seeder
@@ -12,6 +15,9 @@ class DemoDataSeeder extends Seeder
     public function run(): void
     {
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        DB::table('notifications')->truncate();
+        DB::table('model_has_roles')->truncate();
+        DB::table('model_has_permissions')->truncate();
         DB::table('users')->truncate();
         DB::table('vendors')->truncate();
         DB::table('brands')->truncate();
@@ -49,6 +55,14 @@ class DemoDataSeeder extends Seeder
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         // ── Demo Users ──
+        $admin = User::updateOrCreate(['email' => 'admin@mondals.com'], [
+            'name' => 'Super Admin',
+            'password' => bcrypt('password'),
+            'status' => 'active',
+            'email_verified_at' => now(),
+        ]);
+        $admin->assignRole('admin');
+
         $vendor1 = User::updateOrCreate(['email'=>'vendor1@mondals.com'],['name'=>'Mondal Electronics','password'=>bcrypt('password'),'phone'=>'+8801711111111','status'=>'active','email_verified_at'=>now()]);
         $vendor1->assignRole('vendor');
         $vendor2 = User::updateOrCreate(['email'=>'vendor2@mondals.com'],['name'=>'Fashion Hub BD','password'=>bcrypt('password'),'phone'=>'+8801722222222','status'=>'active','email_verified_at'=>now()]);
@@ -459,8 +473,13 @@ class DemoDataSeeder extends Seeder
             ['code'=>'USD','name'=>'US Dollar','symbol'=>'$','exchange_rate'=>0.009100,'position'=>'before','decimal_places'=>2,'decimal_separator'=>'.','thousand_separator'=>',','is_default'=>0,'is_active'=>1,'created_at'=>now(),'updated_at'=>now()],
         ]);
 
+        foreach (Order::orderBy('id')->take(3) as $order) {
+            Notification::send($admin, new NewOrderAdminNotification($order));
+        }
+        $admin->notifications()->oldest()->first()?->markAsRead();
+
         $this->command->info('✅ Demo data seeded successfully!');
         $this->command->info('   Users: admin, staff, 3 vendors, 5 customers');
-        $this->command->info('   Products: 15 | Orders: 12 | Reviews: 8');
+        $this->command->info('   Products: 15 | Orders: 12 | Reviews: 8 | Admin notifications: sample');
     }
 }

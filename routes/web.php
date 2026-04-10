@@ -56,6 +56,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Dashboard
     Route::get('/', [\App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
 
+    Route::get('/notifications', [\App\Http\Controllers\Admin\NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/{id}/visit', [\App\Http\Controllers\Admin\NotificationController::class, 'visit'])->name('notifications.visit')->whereUuid('id');
+    Route::post('/notifications/read-all', [\App\Http\Controllers\Admin\NotificationController::class, 'markAllRead'])->name('notifications.read-all');
+
     // Catalog CRUD (uses BaseCrudController pattern)
     Route::get('products/export', [\App\Http\Controllers\Admin\ProductController::class, 'export'])->name('products.export');
     Route::resource('products', \App\Http\Controllers\Admin\ProductController::class)->except(['show']);

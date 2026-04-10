@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\{Order, Setting, ShippingMethod};
+use App\Notifications\NewOrderAdminNotification;
 use App\Services\{CartService, CheckoutService};
+use App\Support\NotifyAdmins;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -196,6 +198,7 @@ class CheckoutController extends Controller
                 if ($initResult['success'] && !empty($initResult['redirect_url'])) {
                     $appliedCoupon?->increment('times_used');
                     $this->cartService->clearCart();
+                    NotifyAdmins::send(new NewOrderAdminNotification($order));
                     return redirect($initResult['redirect_url']);
                 }
                 
@@ -212,6 +215,7 @@ class CheckoutController extends Controller
             // COD — clear cart and go to confirmation
             $appliedCoupon?->increment('times_used');
             $this->cartService->clearCart();
+            NotifyAdmins::send(new NewOrderAdminNotification($order));
 
             return redirect()->route('order.confirmation', $order->order_number)
                 ->with('success', 'Your order has been placed successfully!');

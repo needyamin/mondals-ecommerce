@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\{Cart, Order, OrderItem, ShippingMethod, TaxRate, Address, Coupon};
+use App\Notifications\NewOrderAdminNotification;
+use App\Support\NotifyAdmins;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Str;
@@ -82,7 +84,7 @@ class CheckoutService
         $totals = $this->calculateTotals($cart, $shippingMethod);
         $user = auth()->user();
 
-        return DB::transaction(function () use ($cart, $shippingAddress, $billingAddress, $shippingMethod, $paymentMethod, $notes, $totals, $user) {
+        $order = DB::transaction(function () use ($cart, $shippingAddress, $billingAddress, $shippingMethod, $paymentMethod, $notes, $totals, $user) {
             
             // 1. Create Order
             $order = Order::create([
@@ -178,5 +180,8 @@ class CheckoutService
 
             return $order;
         });
+        NotifyAdmins::send(new NewOrderAdminNotification($order));
+
+        return $order;
     }
 }
