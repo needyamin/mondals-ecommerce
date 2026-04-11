@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy:
-    name: Deploy to Ubuntu Server via SSH (Cloudflare Tunnel)
+    name: Deploy to Ubuntu via Cloudflare SSH
     runs-on: ubuntu-latest
 
     steps:
@@ -23,12 +23,11 @@ jobs:
           sudo dpkg -i cloudflared-linux-amd64.deb
           cloudflared --version
 
-      # 3️⃣ Setup SSH safely
+      # 3️⃣ Setup SSH (FIXED for Cloudflare Tunnel)
       - name: Setup SSH
         run: |
           set -euxo pipefail
 
-          echo "HOME: $HOME"
           mkdir -p "$HOME/.ssh"
           chmod 700 "$HOME/.ssh"
 
@@ -36,40 +35,39 @@ jobs:
           printf "%s" "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' > "$HOME/.ssh/id_rsa"
           chmod 600 "$HOME/.ssh/id_rsa"
 
-          # Avoid host verification issues
-          ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> "$HOME/.ssh/known_hosts"
+          # Cloudflare tunnel requires disabling host verification
+          echo -e "Host *\n\tStrictHostKeyChecking no\n\tUserKnownHostsFile=/dev/null\n" > "$HOME/.ssh/config"
 
-      # 4️⃣ Deploy via SSH using Cloudflare Tunnel
+      # 4️⃣ Deploy via SSH through Cloudflare Tunnel
       - name: Deploy to Server
         run: |
           set -euxo pipefail
 
           ssh -o "ProxyCommand=cloudflared access ssh --hostname %h" \
-              -o StrictHostKeyChecking=no \
               -i "$HOME/.ssh/id_rsa" \
               "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" << 'EOF'
 
               set -e
 
-              echo "Connected to server"
+              echo "✅ Connected to server"
 
-              # Detect project path
+              # Detect project directory
               if [ -d "$HOME/mondals-ecommerce" ]; then
                 cd "$HOME/mondals-ecommerce"
               elif [ -d "/var/www/mondals-ecommerce" ]; then
                 cd "/var/www/mondals-ecommerce"
               else
-                echo "Project directory not found!"
+                echo "❌ Project directory not found!"
                 exit 1
               fi
 
-              echo "Pulling latest code..."
+              echo "📥 Pulling latest code..."
               git pull origin main
 
-              echo "Running deploy script..."
+              echo "⚙️ Running deploy script..."
               chmod +x scripts/deploy.sh
               ./scripts/deploy.sh
 
-              echo "Deployment completed!"
+              echo "🚀 Deployment completed successfully!"
 
           EOF
