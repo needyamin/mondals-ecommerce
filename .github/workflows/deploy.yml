@@ -1,7 +1,8 @@
-# Cloudflare Tunnel SSH: OpenSSH ProxyCommand (cloudflared access ssh).
-# appleboy/ssh-action has no proxy_command input — only SSH jump host (proxy_host). Use plain ssh here.
+# Secrets (always): SSH_HOST, SSH_USER, SSH_PRIVATE_KEY
 #
-# Secrets: SSH_HOST, SSH_USER, SSH_PRIVATE_KEY, CF_ACCESS_CLIENT_ID, CF_ACCESS_CLIENT_SECRET
+# Optional — only if SSH_HOST is Cloudflare Access / Tunnel (e.g. ssh.example.com):
+#   CF_ACCESS_CLIENT_ID, CF_ACCESS_CLIENT_SECRET
+# Without them: direct SSH to SSH_HOST:22 (must be reachable from the internet; GitHub cannot reach LAN IPs).
 
 name: "Deploy Mondals Ecommerce"
 
@@ -20,13 +21,6 @@ jobs:
       - name: Git Checkout
         uses: actions/checkout@v4
 
-      - name: Install cloudflared
-        run: |
-          set -euxo pipefail
-          wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
-          sudo dpkg -i cloudflared-linux-amd64.deb
-          command -v cloudflared
-
       - name: Deploy via SSH
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
@@ -36,20 +30,31 @@ jobs:
           CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
         run: |
           set -euxo pipefail
-          if [ -z "${CF_ACCESS_CLIENT_ID:-}" ] || [ -z "${CF_ACCESS_CLIENT_SECRET:-}" ]; then
-            echo "Set secrets CF_ACCESS_CLIENT_ID and CF_ACCESS_CLIENT_SECRET (Access Service Token)."
-            exit 1
-          fi
           mkdir -p "$HOME/.ssh"
           chmod 700 "$HOME/.ssh"
           printf '%s' "$SSH_PRIVATE_KEY" | tr -d '\r' > "$HOME/.ssh/id_ed25519"
           chmod 600 "$HOME/.ssh/id_ed25519"
 
-          CF="$(command -v cloudflared)"
-          ssh -T \
-            -o "ProxyCommand=${CF} access ssh --hostname %h --service-token-id ${CF_ACCESS_CLIENT_ID} --service-token-secret ${CF_ACCESS_CLIENT_SECRET}" \
-            -o StrictHostKeyChecking=no \
-            -o UserKnownHostsFile=/dev/null \
-            -i "$HOME/.ssh/id_ed25519" \
-            "${SSH_USER}@${SSH_HOST}" \
-            "set -e; cd ~/mondals-ecommerce 2>/dev/null || cd /var/www/mondals-ecommerce || (echo Project directory not found; exit 1); chmod +x scripts/deploy.sh; ./scripts/deploy.sh"
+          REMOTE="set -e; cd ~/mondals-ecommerce 2>/dev/null || cd /var/www/mondals-ecommerce || (echo Project directory not found; exit 1); chmod +x scripts/deploy.sh; ./scripts/deploy.sh"
+
+          if [ -n "${CF_ACCESS_CLIENT_ID:-}" ] && [ -n "${CF_ACCESS_CLIENT_SECRET:-}" ]; then
+            echo "Deploy: Cloudflare Access (cloudflared)"
+            wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+            sudo dpkg -i cloudflared-linux-amd64.deb
+            CF="$(command -v cloudflared)"
+            ssh -T \
+              -o "ProxyCommand=${CF} access ssh --hostname %h --service-token-id ${CF_ACCESS_CLIENT_ID} --service-token-secret ${CF_ACCESS_CLIENT_SECRET}" \
+              -o StrictHostKeyChecking=no \
+              -o UserKnownHostsFile=/dev/null \
+              -i "$HOME/.ssh/id_ed25519" \
+              "${SSH_USER}@${SSH_HOST}" \
+              "$REMOTE"
+          else
+            echo "Deploy: direct SSH (IPv4). SSH_HOST must be a public IP/DNS with port 22 open."
+            ssh -T -4 \
+              -o StrictHostKeyChecking=accept-new \
+              -o ConnectTimeout=30 \
+              -i "$HOME/.ssh/id_ed25519" \
+              "${SSH_USER}@${SSH_HOST}" \
+              "$REMOTE"
+          fi
