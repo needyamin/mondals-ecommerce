@@ -1,3 +1,10 @@
+# Deploy over SSH via Cloudflare Tunnel + Access.
+#
+# Required GitHub secrets:
+#   SSH_PRIVATE_KEY, SSH_USER, SSH_HOST  (SSH_HOST = Access hostname, e.g. ssh.example.com)
+#   CF_ACCESS_CLIENT_ID, CF_ACCESS_CLIENT_SECRET — Zero Trust → Access → Service Auth → Service Token
+# Add an Access policy so that token may reach your SSH application.
+
 name: Deploy Mondal's E-Commerce
 
 on:
@@ -7,67 +14,57 @@ on:
 
 jobs:
   deploy:
-    name: Deploy to Ubuntu via Cloudflare SSH
+    name: Deploy to Ubuntu Server via SSH (Cloudflare Tunnel)
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout repository
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # 2️⃣ Install cloudflared
       - name: Install cloudflared
         run: |
           set -euxo pipefail
-          wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+          wget -q "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb"
           sudo dpkg -i cloudflared-linux-amd64.deb
+          command -v cloudflared
           cloudflared --version
 
-      # 3️⃣ Setup SSH (FIXED for Cloudflare Tunnel)
-      - name: Setup SSH
+      - name: Setup SSH key
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
           set -euxo pipefail
-
           mkdir -p "$HOME/.ssh"
           chmod 700 "$HOME/.ssh"
-
-          # Add private key safely
-          printf "%s" "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' > "$HOME/.ssh/id_rsa"
+          printf '%s' "$SSH_PRIVATE_KEY" | tr -d '\r' > "$HOME/.ssh/id_rsa"
           chmod 600 "$HOME/.ssh/id_rsa"
 
-          # Cloudflare tunnel requires disabling host verification
-          echo -e "Host *\n\tStrictHostKeyChecking no\n\tUserKnownHostsFile=/dev/null\n" > "$HOME/.ssh/config"
-
-      # 4️⃣ Deploy via SSH through Cloudflare Tunnel
       - name: Deploy to Server
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+          CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
         run: |
           set -euxo pipefail
-
-          ssh -o "ProxyCommand=cloudflared access ssh --hostname %h" \
-              -i "$HOME/.ssh/id_rsa" \
-              "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" << 'EOF'
-
-              set -e
-
-              echo "✅ Connected to server"
-
-              # Detect project directory
-              if [ -d "$HOME/mondals-ecommerce" ]; then
-                cd "$HOME/mondals-ecommerce"
-              elif [ -d "/var/www/mondals-ecommerce" ]; then
-                cd "/var/www/mondals-ecommerce"
-              else
-                echo "❌ Project directory not found!"
-                exit 1
-              fi
-
-              echo "📥 Pulling latest code..."
+          if [ -z "${CF_ACCESS_CLIENT_ID:-}" ] || [ -z "${CF_ACCESS_CLIENT_SECRET:-}" ]; then
+            echo "Missing CF_ACCESS_CLIENT_ID or CF_ACCESS_CLIENT_SECRET."
+            echo "Create a Service Token: Zero Trust → Access → Service Auth. Add both as repo secrets."
+            echo "Without them, cloudflared cannot complete Access login in CI (websocket bad handshake)."
+            exit 1
+          fi
+          CF="$(command -v cloudflared)"
+          # Non-interactive Access auth (browser login does not work in GitHub Actions)
+          ssh -T \
+            -o "ProxyCommand=${CF} access ssh --hostname %h --service-token-id ${CF_ACCESS_CLIENT_ID} --service-token-secret ${CF_ACCESS_CLIENT_SECRET}" \
+            -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=/dev/null \
+            -i "$HOME/.ssh/id_rsa" \
+            "${SSH_USER}@${SSH_HOST}" \
+            'set -e
+              if [ -d "$HOME/mondals-ecommerce" ]; then cd "$HOME/mondals-ecommerce"
+              elif [ -d /var/www/mondals-ecommerce ]; then cd /var/www/mondals-ecommerce
+              else echo "Project directory not found"; exit 1; fi
               git pull origin main
-
-              echo "⚙️ Running deploy script..."
               chmod +x scripts/deploy.sh
-              ./scripts/deploy.sh
-
-              echo "🚀 Deployment completed successfully!"
-
-          EOF
+              ./scripts/deploy.sh'
