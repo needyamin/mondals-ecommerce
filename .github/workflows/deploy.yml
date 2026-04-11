@@ -1,8 +1,15 @@
-# Secrets (always): SSH_HOST, SSH_USER, SSH_PRIVATE_KEY
+# Cloudflare Tunnel SSH — same idea as locally:
+#   ssh -i ~/.ssh/id_ed25519 needyamin@ssh.needyamin.site
+# when ~/.ssh/config uses: ProxyCommand cloudflared access ssh --hostname %h
 #
-# Optional — only if SSH_HOST is Cloudflare Access / Tunnel (e.g. ssh.example.com):
-#   CF_ACCESS_CLIENT_ID, CF_ACCESS_CLIENT_SECRET
-# Without them: direct SSH to SSH_HOST:22 (must be reachable from the internet; GitHub cannot reach LAN IPs).
+# CI cannot open a browser; use Access Service Token secrets (non-interactive).
+#
+# GitHub secrets:
+#   SSH_HOST=ssh.needyamin.site
+#   SSH_USER=needyamin
+#   SSH_PRIVATE_KEY=contents of id_ed25519 (full BEGIN/END block)
+#   CF_ACCESS_CLIENT_ID / CF_ACCESS_CLIENT_SECRET — Zero Trust → Access → Service Auth → Service Token
+#   (Allow that token on your SSH Access application policy.)
 
 name: "Deploy Mondals Ecommerce"
 
@@ -15,13 +22,21 @@ on:
 
 jobs:
   deploy:
-    name: Deploy to Ubuntu Server via SSH
+    name: Deploy via Cloudflare Tunnel SSH
     runs-on: ubuntu-latest
     steps:
-      - name: Git Checkout
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Deploy via SSH
+      - name: Install cloudflared
+        run: |
+          set -euxo pipefail
+          wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+          sudo dpkg -i cloudflared-linux-amd64.deb
+          command -v cloudflared
+          cloudflared --version
+
+      - name: Deploy over SSH (Tunnel)
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}
@@ -30,31 +45,21 @@ jobs:
           CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
         run: |
           set -euxo pipefail
+          if [ -z "${CF_ACCESS_CLIENT_ID:-}" ] || [ -z "${CF_ACCESS_CLIENT_SECRET:-}" ]; then
+            echo "Add repo secrets: CF_ACCESS_CLIENT_ID and CF_ACCESS_CLIENT_SECRET (Access Service Token)."
+            exit 1
+          fi
+
           mkdir -p "$HOME/.ssh"
           chmod 700 "$HOME/.ssh"
           printf '%s' "$SSH_PRIVATE_KEY" | tr -d '\r' > "$HOME/.ssh/id_ed25519"
           chmod 600 "$HOME/.ssh/id_ed25519"
 
-          REMOTE="set -e; cd ~/mondals-ecommerce 2>/dev/null || cd /var/www/mondals-ecommerce || (echo Project directory not found; exit 1); chmod +x scripts/deploy.sh; ./scripts/deploy.sh"
-
-          if [ -n "${CF_ACCESS_CLIENT_ID:-}" ] && [ -n "${CF_ACCESS_CLIENT_SECRET:-}" ]; then
-            echo "Deploy: Cloudflare Access (cloudflared)"
-            wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
-            sudo dpkg -i cloudflared-linux-amd64.deb
-            CF="$(command -v cloudflared)"
-            ssh -T \
-              -o "ProxyCommand=${CF} access ssh --hostname %h --service-token-id ${CF_ACCESS_CLIENT_ID} --service-token-secret ${CF_ACCESS_CLIENT_SECRET}" \
-              -o StrictHostKeyChecking=no \
-              -o UserKnownHostsFile=/dev/null \
-              -i "$HOME/.ssh/id_ed25519" \
-              "${SSH_USER}@${SSH_HOST}" \
-              "$REMOTE"
-          else
-            echo "Deploy: direct SSH (IPv4). SSH_HOST must be a public IP/DNS with port 22 open."
-            ssh -T -4 \
-              -o StrictHostKeyChecking=accept-new \
-              -o ConnectTimeout=30 \
-              -i "$HOME/.ssh/id_ed25519" \
-              "${SSH_USER}@${SSH_HOST}" \
-              "$REMOTE"
-          fi
+          CF="$(command -v cloudflared)"
+          ssh -T \
+            -o "ProxyCommand=${CF} access ssh --hostname %h --service-token-id ${CF_ACCESS_CLIENT_ID} --service-token-secret ${CF_ACCESS_CLIENT_SECRET}" \
+            -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=/dev/null \
+            -i "$HOME/.ssh/id_ed25519" \
+            "${SSH_USER}@${SSH_HOST}" \
+            "set -e; cd ~/mondals-ecommerce 2>/dev/null || cd /var/www/mondals-ecommerce || (echo Project directory not found; exit 1); chmod +x scripts/deploy.sh; ./scripts/deploy.sh"
