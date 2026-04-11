@@ -33,8 +33,9 @@ jobs:
           set -euxo pipefail
           wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
           sudo dpkg -i cloudflared-linux-amd64.deb
-          command -v cloudflared
-          cloudflared --version
+          # Runner PATH often prefers /usr/local/bin (preinstalled); .deb installs to /usr/bin
+          test -x /usr/bin/cloudflared
+          /usr/bin/cloudflared --version
 
       - name: Deploy over SSH (Tunnel)
         env:
@@ -50,12 +51,19 @@ jobs:
             exit 1
           fi
 
+          # Must be the tunnel hostname (e.g. ssh.needyamin.site), not an Access app UUID
+          SSH_HOST="$(printf '%s' "$SSH_HOST" | tr -d '[:space:]')"
+          case "$SSH_HOST" in *.*) ;; *)
+            echo "SSH_HOST must be your SSH FQDN (e.g. ssh.needyamin.site), not a UUID or team id."
+            exit 1
+          ;; esac
+
           mkdir -p "$HOME/.ssh"
           chmod 700 "$HOME/.ssh"
           printf '%s' "$SSH_PRIVATE_KEY" | tr -d '\r' > "$HOME/.ssh/id_ed25519"
           chmod 600 "$HOME/.ssh/id_ed25519"
 
-          CF="$(command -v cloudflared)"
+          CF=/usr/bin/cloudflared
           ssh -T \
             -o "ProxyCommand=${CF} access ssh --hostname %h --service-token-id ${CF_ACCESS_CLIENT_ID} --service-token-secret ${CF_ACCESS_CLIENT_SECRET}" \
             -o StrictHostKeyChecking=no \
