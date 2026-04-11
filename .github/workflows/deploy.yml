@@ -1,14 +1,3 @@
-# SSH deploy from GitHub Actions.
-#
-# Secrets (always):
-#   SSH_PRIVATE_KEY — full private key (ed25519), BEGIN/END lines included
-#   SSH_USER, SSH_HOST — user and host GitHub can reach (public IP/DNS, or Cloudflare hostname)
-#
-# Optional (Cloudflare Zero Trust SSH through Access):
-#   CF_ACCESS_CLIENT_ID, CF_ACCESS_CLIENT_SECRET — Access → Service Auth → Service Token
-#   If BOTH are set → cloudflared access ssh (non-interactive).
-#   If either is missing → plain SSH (no cloudflared). Host must be reachable from the internet
-#   (GitHub cannot SSH to 192.168.x.x unless you use a self-hosted runner on that LAN).
 
 name: Deploy Mondal's E-Commerce
 
