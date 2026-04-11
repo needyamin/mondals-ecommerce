@@ -1,5 +1,9 @@
-# Required secrets: SSH_PRIVATE_KEY, SSH_USER, SSH_HOST
-# Optional (both): CF_ACCESS_CLIENT_ID, CF_ACCESS_CLIENT_SECRET — Cloudflare Access service token
+# appleboy/ssh-action + cloudflared ProxyCommand (Cloudflare Tunnel SSH).
+#
+# Secrets: SSH_HOST, SSH_USER, SSH_PRIVATE_KEY (ed25519 ok)
+# Also add (Zero Trust → Access → Service Auth → Service Token) — required for CI:
+#   CF_ACCESS_CLIENT_ID, CF_ACCESS_CLIENT_SECRET
+# dpkg installs cloudflared to /usr/bin/cloudflared (not /usr/local/bin).
 
 name: "Deploy Mondals Ecommerce"
 
@@ -12,44 +16,33 @@ on:
 
 jobs:
   deploy:
+    name: Deploy to Ubuntu Server via SSH
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Git Checkout
         uses: actions/checkout@v4
 
-      - name: Deploy over SSH
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_USER: ${{ secrets.SSH_USER }}
-          CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
-          CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
+      - name: Install cloudflared
         run: |
-          set -exo pipefail
-          mkdir -p "$HOME/.ssh"
-          chmod 700 "$HOME/.ssh"
-          printf '%s' "$SSH_PRIVATE_KEY" | tr -d '\r' > "$HOME/.ssh/id_ed25519"
-          chmod 600 "$HOME/.ssh/id_ed25519"
+          set -euxo pipefail
+          wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+          sudo dpkg -i cloudflared-linux-amd64.deb
+          command -v cloudflared
+          cloudflared --version
 
-          REMOTE='set -e; if [ -d "$HOME/mondals-ecommerce" ]; then cd "$HOME/mondals-ecommerce"; elif [ -d /var/www/mondals-ecommerce ]; then cd /var/www/mondals-ecommerce; else echo "Project directory not found"; exit 1; fi; git pull origin main; chmod +x scripts/deploy.sh; ./scripts/deploy.sh'
-
-          if [ -n "${CF_ACCESS_CLIENT_ID:-}" ] && [ -n "${CF_ACCESS_CLIENT_SECRET:-}" ]; then
-            echo "Using Cloudflare Access + cloudflared"
-            wget -q "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb"
-            sudo dpkg -i cloudflared-linux-amd64.deb
-            CF="$(command -v cloudflared)"
-            ssh -T \
-              -o "ProxyCommand=${CF} access ssh --hostname %h --service-token-id ${CF_ACCESS_CLIENT_ID} --service-token-secret ${CF_ACCESS_CLIENT_SECRET}" \
-              -o StrictHostKeyChecking=no \
-              -o UserKnownHostsFile=/dev/null \
-              -i "$HOME/.ssh/id_ed25519" \
-              "${SSH_USER}@${SSH_HOST}" \
-              "$REMOTE"
-          else
-            echo "Using direct SSH"
-            ssh -T \
-              -o StrictHostKeyChecking=accept-new \
-              -i "$HOME/.ssh/id_ed25519" \
-              "$SSH_USER@$SSH_HOST" \
-              "$REMOTE"
-          fi
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          port: 22
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          # Same tunnel as your laptop; CI needs Access service token (non-interactive)
+          proxy_command: >-
+            /usr/bin/cloudflared access ssh --hostname ${{ secrets.SSH_HOST }}
+            --service-token-id ${{ secrets.CF_ACCESS_CLIENT_ID }}
+            --service-token-secret ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
+          script: |
+            cd ~/mondals-ecommerce || cd /var/www/mondals-ecommerce || (echo "Project directory not found" && exit 1)
+            chmod +x scripts/deploy.sh
+            ./scripts/deploy.sh
