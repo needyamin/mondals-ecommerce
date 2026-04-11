@@ -1,9 +1,7 @@
-# appleboy/ssh-action + cloudflared ProxyCommand (Cloudflare Tunnel SSH).
+# Cloudflare Tunnel SSH: OpenSSH ProxyCommand (cloudflared access ssh).
+# appleboy/ssh-action has no proxy_command input — only SSH jump host (proxy_host). Use plain ssh here.
 #
-# Secrets: SSH_HOST, SSH_USER, SSH_PRIVATE_KEY (ed25519 ok)
-# Also add (Zero Trust → Access → Service Auth → Service Token) — required for CI:
-#   CF_ACCESS_CLIENT_ID, CF_ACCESS_CLIENT_SECRET
-# dpkg installs cloudflared to /usr/bin/cloudflared (not /usr/local/bin).
+# Secrets: SSH_HOST, SSH_USER, SSH_PRIVATE_KEY, CF_ACCESS_CLIENT_ID, CF_ACCESS_CLIENT_SECRET
 
 name: "Deploy Mondals Ecommerce"
 
@@ -28,21 +26,30 @@ jobs:
           wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
           sudo dpkg -i cloudflared-linux-amd64.deb
           command -v cloudflared
-          cloudflared --version
 
       - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          port: 22
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          # Same tunnel as your laptop; CI needs Access service token (non-interactive)
-          proxy_command: >-
-            /usr/bin/cloudflared access ssh --hostname ${{ secrets.SSH_HOST }}
-            --service-token-id ${{ secrets.CF_ACCESS_CLIENT_ID }}
-            --service-token-secret ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
-          script: |
-            cd ~/mondals-ecommerce || cd /var/www/mondals-ecommerce || (echo "Project directory not found" && exit 1)
-            chmod +x scripts/deploy.sh
-            ./scripts/deploy.sh
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+          CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
+        run: |
+          set -euxo pipefail
+          if [ -z "${CF_ACCESS_CLIENT_ID:-}" ] || [ -z "${CF_ACCESS_CLIENT_SECRET:-}" ]; then
+            echo "Set secrets CF_ACCESS_CLIENT_ID and CF_ACCESS_CLIENT_SECRET (Access Service Token)."
+            exit 1
+          fi
+          mkdir -p "$HOME/.ssh"
+          chmod 700 "$HOME/.ssh"
+          printf '%s' "$SSH_PRIVATE_KEY" | tr -d '\r' > "$HOME/.ssh/id_ed25519"
+          chmod 600 "$HOME/.ssh/id_ed25519"
+
+          CF="$(command -v cloudflared)"
+          ssh -T \
+            -o "ProxyCommand=${CF} access ssh --hostname %h --service-token-id ${CF_ACCESS_CLIENT_ID} --service-token-secret ${CF_ACCESS_CLIENT_SECRET}" \
+            -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=/dev/null \
+            -i "$HOME/.ssh/id_ed25519" \
+            "${SSH_USER}@${SSH_HOST}" \
+            "set -e; cd ~/mondals-ecommerce 2>/dev/null || cd /var/www/mondals-ecommerce || (echo Project directory not found; exit 1); chmod +x scripts/deploy.sh; ./scripts/deploy.sh"
