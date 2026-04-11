@@ -67,16 +67,15 @@ jobs:
           printf '%s' "$SSH_PRIVATE_KEY" | tr -d '\r' > "$HOME/.ssh/id_ed25519"
           chmod 600 "$HOME/.ssh/id_ed25519"
 
-          export CLOUDFLARE_ACCESS_CLIENT_ID="$CF_ACCESS_CLIENT_ID"
-          export CLOUDFLARE_ACCESS_CLIENT_SECRET="$CF_ACCESS_CLIENT_SECRET"
-
-          # cloudflared maps TUNNEL_SERVICE_URL → --url; if set (e.g. *.access without :port) it uses listener mode and errors.
-          unset TUNNEL_SERVICE_URL TUNNEL_SERVICE_HOSTNAME TUNNEL_SERVICE_DESTINATION || true
+          # cloudflared: first extra argv becomes --url (listener). Do not put secrets in ProxyCommand (shell splits / special chars).
+          unset TUNNEL_SERVICE_URL || true
+          export TUNNEL_SERVICE_HOSTNAME="$SSH_HOST"
+          export TUNNEL_SERVICE_TOKEN_ID="$CF_ACCESS_CLIENT_ID"
+          export TUNNEL_SERVICE_TOKEN_SECRET="$CF_ACCESS_CLIENT_SECRET"
 
           CF=/usr/bin/cloudflared
-          # Use literal hostname (not %%h) — avoids mis-resolved internal *.access addresses on some runners
           ssh -T \
-            -o "ProxyCommand=${CF} access ssh --hostname ${SSH_HOST} --service-token-id ${CF_ACCESS_CLIENT_ID} --service-token-secret ${CF_ACCESS_CLIENT_SECRET}" \
+            -o "ProxyCommand=${CF} access ssh" \
             -o StrictHostKeyChecking=no \
             -o UserKnownHostsFile=/dev/null \
             -i "$HOME/.ssh/id_ed25519" \
