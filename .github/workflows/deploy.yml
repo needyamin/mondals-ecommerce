@@ -1,7 +1,8 @@
 # Deploy over SSH via Cloudflare Tunnel + Access.
 #
 # Required GitHub secrets:
-#   SSH_PRIVATE_KEY, SSH_USER, SSH_HOST  (SSH_HOST = Access hostname, e.g. ssh.example.com)
+#   SSH_PRIVATE_KEY — full OpenSSH private key (ed25519 ok), including BEGIN/END lines
+#   SSH_USER, SSH_HOST  (SSH_HOST = Access hostname, e.g. ssh.example.com)
 #   CF_ACCESS_CLIENT_ID, CF_ACCESS_CLIENT_SECRET — Zero Trust → Access → Service Auth → Service Token
 # Add an Access policy so that token may reach your SSH application.
 
@@ -36,8 +37,8 @@ jobs:
           set -euxo pipefail
           mkdir -p "$HOME/.ssh"
           chmod 700 "$HOME/.ssh"
-          printf '%s' "$SSH_PRIVATE_KEY" | tr -d '\r' > "$HOME/.ssh/id_rsa"
-          chmod 600 "$HOME/.ssh/id_rsa"
+          printf '%s' "$SSH_PRIVATE_KEY" | tr -d '\r' > "$HOME/.ssh/id_ed25519"
+          chmod 600 "$HOME/.ssh/id_ed25519"
 
       - name: Deploy to Server
         env:
@@ -59,7 +60,7 @@ jobs:
             -o "ProxyCommand=${CF} access ssh --hostname %h --service-token-id ${CF_ACCESS_CLIENT_ID} --service-token-secret ${CF_ACCESS_CLIENT_SECRET}" \
             -o StrictHostKeyChecking=no \
             -o UserKnownHostsFile=/dev/null \
-            -i "$HOME/.ssh/id_rsa" \
+            -i "$HOME/.ssh/id_ed25519" \
             "${SSH_USER}@${SSH_HOST}" \
             'set -e
               if [ -d "$HOME/mondals-ecommerce" ]; then cd "$HOME/mondals-ecommerce"
