@@ -1,10 +1,14 @@
-# Deploy over SSH via Cloudflare Tunnel + Access.
+# SSH deploy from GitHub Actions.
 #
-# Required GitHub secrets:
-#   SSH_PRIVATE_KEY — full OpenSSH private key (ed25519 ok), including BEGIN/END lines
-#   SSH_USER, SSH_HOST  (SSH_HOST = Access hostname, e.g. ssh.example.com)
-#   CF_ACCESS_CLIENT_ID, CF_ACCESS_CLIENT_SECRET — Zero Trust → Access → Service Auth → Service Token
-# Add an Access policy so that token may reach your SSH application.
+# Secrets (always):
+#   SSH_PRIVATE_KEY — full private key (ed25519), BEGIN/END lines included
+#   SSH_USER, SSH_HOST — user and host GitHub can reach (public IP/DNS, or Cloudflare hostname)
+#
+# Optional (Cloudflare Zero Trust SSH through Access):
+#   CF_ACCESS_CLIENT_ID, CF_ACCESS_CLIENT_SECRET — Access → Service Auth → Service Token
+#   If BOTH are set → cloudflared access ssh (non-interactive).
+#   If either is missing → plain SSH (no cloudflared). Host must be reachable from the internet
+#   (GitHub cannot SSH to 192.168.x.x unless you use a self-hosted runner on that LAN).
 
 name: Deploy Mondal's E-Commerce
 
@@ -15,7 +19,7 @@ on:
 
 jobs:
   deploy:
-    name: Deploy to Ubuntu Server via SSH (Cloudflare Tunnel)
+    name: Deploy via SSH
     runs-on: ubuntu-latest
 
     steps:
@@ -23,6 +27,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install cloudflared
+        if: ${{ secrets.CF_ACCESS_CLIENT_ID != '' && secrets.CF_ACCESS_CLIENT_SECRET != '' }}
         run: |
           set -euxo pipefail
           wget -q "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb"
@@ -48,24 +53,29 @@ jobs:
           CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
         run: |
           set -euxo pipefail
-          if [ -z "${CF_ACCESS_CLIENT_ID:-}" ] || [ -z "${CF_ACCESS_CLIENT_SECRET:-}" ]; then
-            echo "Missing CF_ACCESS_CLIENT_ID or CF_ACCESS_CLIENT_SECRET."
-            echo "Create a Service Token: Zero Trust → Access → Service Auth. Add both as repo secrets."
-            echo "Without them, cloudflared cannot complete Access login in CI (websocket bad handshake)."
-            exit 1
+          REMOTE_SCRIPT='set -e
+            if [ -d "$HOME/mondals-ecommerce" ]; then cd "$HOME/mondals-ecommerce"
+            elif [ -d /var/www/mondals-ecommerce ]; then cd /var/www/mondals-ecommerce
+            else echo "Project directory not found"; exit 1; fi
+            git pull origin main
+            chmod +x scripts/deploy.sh
+            ./scripts/deploy.sh'
+
+          if [ -n "${CF_ACCESS_CLIENT_ID:-}" ] && [ -n "${CF_ACCESS_CLIENT_SECRET:-}" ]; then
+            echo "Using Cloudflare Access (cloudflared access ssh)."
+            CF="$(command -v cloudflared)"
+            ssh -T \
+              -o "ProxyCommand=${CF} access ssh --hostname %h --service-token-id ${CF_ACCESS_CLIENT_ID} --service-token-secret ${CF_ACCESS_CLIENT_SECRET}" \
+              -o StrictHostKeyChecking=no \
+              -o UserKnownHostsFile=/dev/null \
+              -i "$HOME/.ssh/id_ed25519" \
+              "${SSH_USER}@${SSH_HOST}" \
+              "$REMOTE_SCRIPT"
+          else
+            echo "Using direct SSH (set CF_ACCESS_CLIENT_ID + CF_ACCESS_CLIENT_SECRET for Cloudflare Tunnel + Access)."
+            ssh -T \
+              -o StrictHostKeyChecking=accept-new \
+              -i "$HOME/.ssh/id_ed25519" \
+              "${SSH_USER}@${SSH_HOST}" \
+              "$REMOTE_SCRIPT"
           fi
-          CF="$(command -v cloudflared)"
-          # Non-interactive Access auth (browser login does not work in GitHub Actions)
-          ssh -T \
-            -o "ProxyCommand=${CF} access ssh --hostname %h --service-token-id ${CF_ACCESS_CLIENT_ID} --service-token-secret ${CF_ACCESS_CLIENT_SECRET}" \
-            -o StrictHostKeyChecking=no \
-            -o UserKnownHostsFile=/dev/null \
-            -i "$HOME/.ssh/id_ed25519" \
-            "${SSH_USER}@${SSH_HOST}" \
-            'set -e
-              if [ -d "$HOME/mondals-ecommerce" ]; then cd "$HOME/mondals-ecommerce"
-              elif [ -d /var/www/mondals-ecommerce ]; then cd /var/www/mondals-ecommerce
-              else echo "Project directory not found"; exit 1; fi
-              git pull origin main
-              chmod +x scripts/deploy.sh
-              ./scripts/deploy.sh'
