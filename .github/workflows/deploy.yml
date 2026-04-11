@@ -10,6 +10,10 @@
 #   SSH_PRIVATE_KEY=contents of id_ed25519 (full BEGIN/END block)
 #   CF_ACCESS_CLIENT_ID / CF_ACCESS_CLIENT_SECRET — Zero Trust → Access → Service Auth → Service Token
 #   (Allow that token on your SSH Access application policy.)
+#
+# If you see: "address ….access: missing port" — that fails on the RUNNER (cloudflared), not your Ubuntu
+# sshd. Fix Cloudflare: same hostname as the Access app, token allowed in that app’s policy, try explicit
+# hostname below (not %h). See: https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/use-cases/ssh/
 
 name: "Deploy Mondals Ecommerce"
 
@@ -63,9 +67,13 @@ jobs:
           printf '%s' "$SSH_PRIVATE_KEY" | tr -d '\r' > "$HOME/.ssh/id_ed25519"
           chmod 600 "$HOME/.ssh/id_ed25519"
 
+          export CLOUDFLARE_ACCESS_CLIENT_ID="$CF_ACCESS_CLIENT_ID"
+          export CLOUDFLARE_ACCESS_CLIENT_SECRET="$CF_ACCESS_CLIENT_SECRET"
+
           CF=/usr/bin/cloudflared
+          # Use literal hostname (not %%h) — avoids mis-resolved internal *.access addresses on some runners
           ssh -T \
-            -o "ProxyCommand=${CF} access ssh --hostname %h --service-token-id ${CF_ACCESS_CLIENT_ID} --service-token-secret ${CF_ACCESS_CLIENT_SECRET}" \
+            -o "ProxyCommand=${CF} access ssh --hostname ${SSH_HOST} --service-token-id ${CF_ACCESS_CLIENT_ID} --service-token-secret ${CF_ACCESS_CLIENT_SECRET}" \
             -o StrictHostKeyChecking=no \
             -o UserKnownHostsFile=/dev/null \
             -i "$HOME/.ssh/id_ed25519" \
