@@ -473,9 +473,12 @@ class DemoDataSeeder extends Seeder
             ['code'=>'USD','name'=>'US Dollar','symbol'=>'$','exchange_rate'=>0.009100,'position'=>'before','decimal_places'=>2,'decimal_separator'=>'.','thousand_separator'=>',','is_default'=>0,'is_active'=>1,'created_at'=>now(),'updated_at'=>now()],
         ]);
 
-        foreach (Order::orderBy('id')->take(3) as $order) {
-            Notification::send($admin, new NewOrderAdminNotification($order));
-        }
+       Order::orderBy('id')
+    ->take(3)
+    ->get()
+    ->each(function ($order) use ($admin) {
+        $admin->notify(new NewOrderAdminNotification($order));
+     });     
         $admin->notifications()->oldest()->first()?->markAsRead();
 
         $this->command->info('✅ Demo data seeded successfully!');
